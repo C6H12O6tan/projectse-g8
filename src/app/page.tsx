@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Container, TextField, Typography } from "@mui/material";
@@ -44,4 +44,4 @@ export default function Home() {
       </Container>
     </div>
   );
-}
+}*/
