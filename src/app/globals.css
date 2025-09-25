@@ -24,3 +24,145 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+:root{
+  /* สีอิงจากภาพ Figma */
+  --bg-page: #EBECEF;                 /* เทาพื้นนอกกรอบ */
+  --bg-paper: #FFFFFF;                /* พื้นขาวของเนื้อหา */
+  --line: #E3E5E8;                    /* เส้นคั่นอ่อน */
+  --ink: #0F172A;                     /* ข้อความเข้ม */
+  --muted: #6B7280;                   /* ข้อความรอง */
+
+  --brand-navy: #2F4C7A;              /* สีพื้นการ์ด */
+  --brand-navy-2: #2A466F;            /* เฉดเข้มในภาพ */
+  --badge-bg: #D9F99D;                /* ป้าย UPDATE */
+  --badge-ink:#365314;
+
+  --radius-xl: 18px;                  /* มุมการ์ดใกล้เคียง Figma */
+  --shadow-strong: 0 10px 24px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);
+}
+
+*{ box-sizing: border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: var(--bg-page);
+  color: var(--ink);
+}
+
+/* ====== Container ====== */
+.container{
+  max-width: 1216px;                  /* ให้ใกล้กับสัดส่วนในภาพ */
+  margin: 24px auto 56px;
+  padding: 0 24px;
+}
+
+/* ====== Top Bar ====== */
+.topbar{
+  background: var(--bg-paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 28px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.topbar-left{ display:flex; align-items:center; gap:16px; }
+.brand-title{ font-size:24px; font-weight:800; letter-spacing:.2px; }
+.nav{ display:flex; gap:40px; }
+.nav a{ font-weight:600; text-decoration:none; color:var(--ink); }
+.nav a:hover{ opacity:.7; }
+
+/* ====== Divider under topbar ====== */
+.hr{
+  border: 0; border-top:1px solid var(--line);
+  margin: 18px 0 0;
+}
+
+/* ====== Section Header & Search Row ====== */
+.section-title{
+  font-size: 28px;
+  font-weight: 900;
+  margin: 22px 0 10px;
+}
+
+.search-row{
+  display:flex; justify-content:flex-end; align-items:center; gap:12px;
+  margin: 8px 0 22px;
+}
+.input{
+  width: 360px; max-width: 100%;
+  border:1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px 10px 40px;
+  background: #fff url("/globe.svg") no-repeat 12px center; /* ไอคอนแว่นในภาพ */
+  background-size: 18px;
+  font-size:14px;
+  outline: none;
+}
+.btn-outline{
+  border:1px solid #C9D0D8;
+  background:#fff;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ====== Grid ====== */
+.grid{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 28px;                          /* ระยะการ์ดตามภาพ */
+}
+@media (max-width: 1024px){ .grid{ grid-template-columns: repeat(2, 1fr);} }
+@media (max-width: 640px){ .grid{ grid-template-columns: 1fr;} }
+
+/* ====== Card ====== */
+.card{
+  position:relative;
+  background: var(--brand-navy);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  color: #fff;
+  box-shadow: var(--shadow-strong);
+  border: 1px solid rgba(255,255,255,.06);
+}
+.card h3{
+  margin:0 0 4px 0;
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;          /* Title เป็นตัวพิมพ์ใหญ่ */
+  letter-spacing: .4px;
+}
+.card .author{
+  color:#DDE4EF;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+/* thumbnail */
+.thumb{
+  background: var(--brand-navy-2);
+  height: 190px;
+  border-radius: 14px;
+  overflow: hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.thumb img{ width:100%; height:100%; object-fit: cover; border-radius: 14px; }
+
+/* badge */
+.badge{
+  position:absolute; left:16px; bottom:14px;
+  background: var(--badge-bg);
+  color: var(--badge-ink);
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* clamp 2 บรรทัดสำหรับ title ยาว */
+.clamp-2{
+  display:-webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow:hidden;
+}
