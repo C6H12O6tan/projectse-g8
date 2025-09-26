@@ -1,3 +1,4 @@
+// จำลองให้มันดูสวยๆ
 export type Publication = {
   id: string;
   title: string;
@@ -6,6 +7,8 @@ export type Publication = {
   keywords: string[];
   year: number;
   coverUrl?: string;
+  department?: string;   // สาขาวิชา/สังกัด
+  category?: string;     // ประเภท (เช่น Journal, Conference, Project, Creative)
 };
 
 export const publications: Publication[] = [
@@ -16,7 +19,7 @@ export const publications: Publication[] = [
     abstract: "",
     keywords: ["robot", "phenotyping"],
     year: 2025,
-    coverUrl: "/works/phenorobot.jpg",
+    coverUrl: "https://img.freepik.com/premium-vector/add-image-icon_194117-687.jpg",
   },
   {
     id: "p-002",
@@ -25,7 +28,7 @@ export const publications: Publication[] = [
     abstract: "",
     keywords: ["academic"],
     year: 2024,
-    coverUrl: "/works/achievements.jpg",
+    coverUrl: "https://img.freepik.com/premium-vector/add-image-icon_194117-687.jpg",
   },
   {
     id: "p-003",
@@ -34,7 +37,7 @@ export const publications: Publication[] = [
     abstract: "",
     keywords: ["publication"],
     year: 2025,
-    coverUrl: "/works/contributions.jpg",
+    coverUrl: "https://img.freepik.com/premium-vector/add-image-icon_194117-687.jpg",
   },
   {
     id: "p-004",
@@ -43,7 +46,7 @@ export const publications: Publication[] = [
     abstract: "",
     keywords: ["innovation"],
     year: 2025,
-    coverUrl: "/works/innovative.jpg",
+    coverUrl: "https://img.freepik.com/premium-vector/add-image-icon_194117-687.jpg",
   },
   {
     id: "p-005",
@@ -52,7 +55,7 @@ export const publications: Publication[] = [
     abstract: "",
     keywords: ["journals"],
     year: 2025,
-    coverUrl: "/works/journals.jpg",
+    coverUrl: "https://img.freepik.com/premium-vector/add-image-icon_194117-687.jpg",
   },
   {
     id: "p-006",
@@ -61,6 +64,6 @@ export const publications: Publication[] = [
     abstract: "",
     keywords: ["creative"],
     year: 2025,
-    coverUrl: "/works/creative.jpg",
+    coverUrl: "https://img.freepik.com/premium-vector/add-image-icon_194117-687.jpg",
   },
 ];

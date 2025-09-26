@@ -166,3 +166,49 @@ body{
   -webkit-line-clamp: 2;
   overflow:hidden;
 }
+
+/* กล่องฟอร์มค้นหาขั้นสูง */
+.advbox{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  display:grid;
+  grid-template-columns: repeat(4, 1fr) 140px 140px; /* 4 ช่องเท่ากัน + ปุ่ม 2 อันกว้างเท่ากัน */
+  gap:12px;
+}
+
+/* คุมรูปร่างช่อง/ปุ่มให้เท่ากัน */
+.ctrl {
+  height: 44px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fff;
+  padding: 10px 12px;
+  font-size:14px;
+}
+
+/* อินพุตมีไอคอนซ้ายแบบหน้า Home */
+.ctrl.input-with-icon{
+  padding-left: 40px;
+  background:#fff url("/globe.svg") no-repeat 12px center;
+  background-size: 18px;
+}
+
+/* ปุ่มมาตรฐาน */
+.btn {
+  height:44px;
+  border:1px solid #C9D0D8;
+  border-radius:12px;
+  background:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* เน้นปุ่มค้นหาให้เด่นขึ้นเล็กน้อย */
+.btn-primary{
+  background:#628ef5; /*สีเก่า  #0f172a */
+  color:#fff;
+  border-color:#628ef5;
+}
+.btn:hover{ opacity:.92; }
