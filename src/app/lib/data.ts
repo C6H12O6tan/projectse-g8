@@ -3,12 +3,15 @@ export type Publication = {
   id: string;
   title: string;
   authors: string[];
+  coAuthors?: string[];  // ผู้เขียนร่วม
   abstract: string;
   keywords: string[];
   year: number;
+  storage?: string;      // สถานที่จัดเก็บ
   coverUrl?: string;
   department?: string;   // สาขาวิชา/สังกัด
   category?: string;     // ประเภท (เช่น Journal, Conference, Project, Creative)
+  fileUrl?: string;      // << ลิงก์ไฟล์ PDF สำหรับดาวน์โหลด
 };
 
 export const publications: Publication[] = [
@@ -65,5 +68,17 @@ export const publications: Publication[] = [
     keywords: ["creative"],
     year: 2025,
     coverUrl: "https://img.freepik.com/premium-vector/add-image-icon_194117-687.jpg",
+  },
+  {
+    id: "p-007",
+    title: "Digital Learning in Higher Education",
+    authors: ["Jane Cooper"],
+    coAuthors: ["—"], // หรือใส่รายชื่อจริง
+    abstract: "งานวิจัยนี้ศึกษาบทบาทและผลกระทบของการเรียนรู้ดิจิทัลต่อการจัดการเรียนการสอนในระดับอุดมศึกษา................................",
+    keywords: ["digital learning", "higher education"],
+    year: 2558,
+    storage: "คณะวิทยาศาสตร์ มหาวิทยาลัยสงขลานครินทร์",
+    coverUrl: "https://img.freepik.com/premium-vector/add-image-icon_194117-687.jpg",
+    fileUrl: "/files/Monkeykissyou.pdf"  // วางไฟล์ตามพาธนี้ใน public/
   },
 ];
