@@ -408,3 +408,57 @@ body{
 
 /* ระยะขอบรอบหน้าให้เหมือนภาพ */
 .detail-wrap{ padding: 10px 8px 40px; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 28px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffffcc; /* ขาวโปร่งนิดหน่อย */
+  backdrop-filter: blur(6px);
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  transition: color 0.2s;
+}
+.nav-link:hover {
+  color: #0f172a;
+}
+
+/* ปุ่ม Login */
+.btn-login {
+  padding: 8px 18px;
+  border-radius: 9999px;
+  border: 2px solid #2563eb;
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 14px;
+  background: #fff;
+  transition: all 0.2s ease-in-out;
+}
+.btn-login:hover {
+  background: #2563eb;
+  color: #fff;
+}

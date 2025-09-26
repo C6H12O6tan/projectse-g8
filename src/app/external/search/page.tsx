@@ -98,7 +98,7 @@ function Select({
       onChange={e=>onChange(e.target.value)}
       className={className}
     >
-      <option value="">{placeholder} ▾</option>
+      <option value="">{placeholder} </option>
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
   );
