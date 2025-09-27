@@ -20,6 +20,7 @@ export default function TopNav() {
       <nav className="nav">
         <Link href="/Admin" className="nav-link">HOME</Link>
         <Link href="/Admin" className="nav-link">PROJECT</Link>
+        <Link href="/Admin/user" className="nav-link">USERS</Link>
         <Link href="/login" className="btn-login">Login</Link>
       </nav>
     </div>
