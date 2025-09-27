@@ -9,7 +9,7 @@ export default function SearchBar(){
   const [q,setQ] = useState("");
 
   useEffect(()=>{ setQ(sp.get("q") ?? ""); }, [sp]);
-  const go = () => router.push(`/external${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+  const go = () => router.push(`/Admin${q ? `?q=${encodeURIComponent(q)}` : ""}`);
 
   return (
     <div className="search-row">
@@ -21,7 +21,7 @@ export default function SearchBar(){
         onKeyDown={e=> e.key==="Enter" && go()}
       />
       {/* เดิมเป็น alert → เปลี่ยนเป็นลิงก์ไปหน้าค้นหาขั้นสูง */}
-      <Link href="/external/search" className="btn-outline">⚙️ ค้นหาขั้นสูง</Link>
+      <Link href="/Admin/search" className="btn-outline">⚙️ ค้นหาขั้นสูง</Link>
     </div>
   );
 }

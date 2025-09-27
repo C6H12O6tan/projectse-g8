@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { FiSearch } from "react-icons/fi"; // ไอคอนแว่นขยาย
+//import { FiSearch } from "react-icons/fi"; // ไอคอนแว่นขยาย
 import { useState } from "react";
 
 export default function Header() {

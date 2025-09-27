@@ -18,8 +18,8 @@ export default function TopNav() {
 
       {/* ขวา: เมนู + ปุ่ม Login */}
       <nav className="nav">
-        <Link href="/external" className="nav-link">HOME</Link>
-        <Link href="/external" className="nav-link">PROJECT</Link>
+        <Link href="/Admin" className="nav-link">HOME</Link>
+        <Link href="/Admin" className="nav-link">PROJECT</Link>
         <Link href="/login" className="btn-login">Login</Link>
       </nav>
     </div>

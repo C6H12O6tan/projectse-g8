@@ -12,7 +12,7 @@ import { publications, type Publication } from "../lib/data";
 
 type Props = { searchParams?: { q?: string } };
 
-export default function ExternalHome({ searchParams }: Props) {
+export default function Home({ searchParams }: Props) {
   const q = (searchParams?.q ?? "").toLowerCase().trim();
 
   const items: Publication[] = q

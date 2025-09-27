@@ -12,7 +12,7 @@ export default function ExternalLogin() {
     e.preventDefault();
     // TODO: เรียก API login จริง
     // เดโม: ถ้าใส่อะไรมาก็เด้งไปหน้าโฮม external
-    router.push("/external");
+    router.push("/Admin");
   };
 
   return (
