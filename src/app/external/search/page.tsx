@@ -1,8 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
 import TopNav from "../../components/TopNav";
-import ExternalCard from "../../components/ExternalCard";
 import { publications, type Publication } from "../../lib/data";
+import ResultRow from "../../components/ResultRow";   
 
 type Option = { label: string; value: string };
 
@@ -51,54 +51,44 @@ export default function AdvancedSearch() {
       <hr className="hr" />
       <h2 className="section-title">สืบค้นผลงานตีพิมพ์</h2>
 
-      {/* ======= ฟอร์มค้นหาขั้นสูง ======= */}
+      {/* ======= ฟอร์มค้นหาขั้นสูง (เดิมของคุณ) ======= */}
       <div className="advbox">
-        {/* 1) คีย์เวิร์ด */}
         <input
           className="ctrl input-with-icon"
           placeholder="ชื่อผลงาน, ชื่อผู้วิจัย…"
           value={q}
           onChange={e=>setQ(e.target.value)}
         />
-
-        {/* 2) สาขาวิชา/สังกัด */}
         <Select className="ctrl" value={dept} onChange={setD} placeholder="สาขาวิชา/สังกัด" options={departments} />
-
-        {/* 3) ประเภท */}
-        <Select className="ctrl" value={cat} onChange={setC} placeholder="ประเภท" options={categories} />
-
-        {/* 4) ปีที่ตีพิมพ์ */}
-        <Select className="ctrl" value={year} onChange={setY} placeholder="ปีที่ตีพิมพ์" options={years} />
-
-        {/* 5) ปุ่ม 'ค้นหา' (ให้อยู่ก่อน) */}
+        <Select className="ctrl" value={cat}  onChange={setC} placeholder="ประเภท"           options={categories} />
+        <Select className="ctrl" value={year} onChange={setY} placeholder="ปีที่ตีพิมพ์"      options={years} />
         <button className="btn btn-primary">ค้นหา</button>
-
-        {/* 6) ปุ่ม 'ล้างค่า' (ตามหลัง และข้อความยาวได้ ไม่ดัน layout เพราะเราฟิกซ์ความกว้างคอลัมน์ไว้แล้ว) */}
         <button className="btn" onClick={reset}>ล้างค่า</button>
       </div>
 
-      {/* ผลลัพธ์ */}
-      <div className="grid" style={{ marginTop: 18 }}>
-        {results.map(p => <ExternalCard key={p.id} pub={p} />)}
+      {/* ======= แสดงผลแบบแถวแนวนอน ======= */}
+      <div className="list-vertical" style={{ marginTop: 18 }}>
+        {results.map(p => <ResultRow key={p.id} pub={p} />)}
       </div>
-      {results.length === 0 && <p style={{marginTop:12, color:"var(--muted)"}}>ไม่พบผลลัพธ์ที่ตรงกับเงื่อนไข</p>}
+
+      {results.length === 0 && (
+        <p style={{marginTop:12, color:"var(--muted)"}}>
+          ไม่พบผลลัพธ์ที่ตรงกับเงื่อนไข
+        </p>
+      )}
     </main>
   );
 }
 
-/* --- Select component --- */
+/* --- Select component (ของเดิม) --- */
 function Select({
   value, onChange, placeholder, options, className=""
 }:{
   value: string; onChange:(v:string)=>void; placeholder: string; options: Option[]; className?: string;
 }){
   return (
-    <select
-      value={value}
-      onChange={e=>onChange(e.target.value)}
-      className={className}
-    >
-      <option value="">{placeholder} </option>
+    <select value={value} onChange={e=>onChange(e.target.value)} className={className}>
+      <option value="">{placeholder}</option>
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
   );
