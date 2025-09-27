@@ -21,6 +21,7 @@ export default function TopNav() {
         <Link href="/Admin" className="nav-link">HOME</Link>
         <Link href="/Admin" className="nav-link">PROJECT</Link>
         <Link href="/Admin/user" className="nav-link">USERS</Link>
+        <Link href="/" className="nav-link">History</Link>
         <Link href="/login" className="btn-login">Login</Link>
       </nav>
     </div>

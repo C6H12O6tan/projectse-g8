@@ -82,3 +82,17 @@ export const publications: Publication[] = [
     fileUrl: "/files/Monkeykissyou.pdf"  // วางไฟล์ตามพาธนี้ใน public/
   },
 ];
+
+export type User = {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+};
+
+export const mockUsers: User[] = Array.from({ length: 20 }, (_, i) => ({
+  id: i + 1,
+  name: `User ${i + 1}`,
+  phone: `(555) 123-45${i.toString().padStart(2, "0")}`,
+  email: `user${i + 1}@example.com`,
+})).reverse();

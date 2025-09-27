@@ -1,27 +1,15 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import TopNav from "../../components/TopNav";
-
-type User = {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-};
-
-// mock ข้อมูล 20 record (เรียงจากใหม่ -> เก่า)
-const mockUsers: User[] = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  name: `User ${20 - i}`, // แสดง User 20,19,...1
-  phone: `(555) 123-45${i.toString().padStart(2, "0")}`,
-  email: `user${20 - i}@example.com`,
-}));
+import { mockUsers, User } from "../../lib/data";
 
 export default function UserPage() {
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [search, setSearch] = useState("");
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
 
   const rowsPerPage = 8;
 
@@ -42,8 +30,9 @@ export default function UserPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <main className="container">
       <TopNav />
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto p-6">
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
@@ -72,17 +61,23 @@ export default function UserPage() {
               <th className="p-3 text-left">ชื่อ - สกุล</th>
               <th className="p-3 text-left">Phone Number</th>
               <th className="p-3 text-left">Email</th>
-            
+              <th className="p-3 text-center">การจัดการ</th>
             </tr>
           </thead>
           <tbody>
             {paginatedUsers.map((user) => (
-              <tr key={user.id} className="border-t border-b border-gray-200 shadow-sm ">
+              <tr
+                key={user.id}
+                className="border-t border-b border-gray-200 shadow-sm"
+              >
                 <td className="p-5 pr-20">{user.name}</td>
                 <td className="p-3">{user.phone}</td>
                 <td className="p-3">{user.email}</td>
                 <td className="p-3 text-center space-x-2">
-                  <button className="mr-5 bg-green-300 text-white border border-green-500 px-5 py-1 rounded-md hover:bg-green-600">
+                  <button
+                    onClick={() => router.push(`/Admin/user/edituser/${user.id}`)}
+                    className="mr-5 bg-green-300 text-white border border-green-500 px-5 py-1 rounded-md hover:bg-green-600"
+                  >
                     แก้ไข
                   </button>
                   <button
@@ -121,7 +116,8 @@ export default function UserPage() {
           <div className="bg-white rounded-lg shadow-lg p-6 w-96">
             <h2 className="text-lg font-semibold mb-4">ยืนยันการลบ</h2>
             <p className="mb-6">
-              คุณต้องการลบบัญชี <span className="font-bold">{deleteUser.name}</span> ใช่หรือไม่?
+              คุณต้องการลบบัญชี{" "}
+              <span className="font-bold">{deleteUser.name}</span> ใช่หรือไม่?
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -139,7 +135,9 @@ export default function UserPage() {
             </div>
           </div>
         </div>
+        
       )}
     </div>
+    </main>
   );
 }
