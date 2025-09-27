@@ -1,61 +1,39 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Header from "../components/Header";
-import Card from "../components/Card";
-import { projects } from "../data/mockData";
-import { FiSearch } from "react-icons/fi";
+// src/app/external/page.tsx
+//import TopNav from "../components/TopNav";
+//import SearchBar from "../components/SearchBar";
+//import ExternalCard from "../components/ExternalCard";
 
-export default function HomePage() {
-  const [query, setQuery] = useState("");
-  const router = useRouter();
+//import  { publications, type Publication } from "../lib/data";
 
-  const handleSearch = () => {
-    if (query.trim() !== "") {
-      router.push(`/search?keyword=${encodeURIComponent(query)}`);
-    } else {
-      router.push("/search");
-    }
-  };
+import TopNav from "../components/TopNav";
+import SearchBar from "../components/SearchBar";
+import ExternalCard from "../components/ExternalCard";
+import { publications, type Publication } from "../lib/data";
+
+type Props = { searchParams?: { q?: string } };
+
+export default function ExternalHome({ searchParams }: Props) {
+  const q = (searchParams?.q ?? "").toLowerCase().trim();
+
+  const items: Publication[] = q
+    ? publications.filter((p: Publication) =>
+        p.title.toLowerCase().includes(q) ||
+        p.authors.join(" ").toLowerCase().includes(q) ||
+        p.keywords.join(" ").toLowerCase().includes(q)
+      )
+    : publications;
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <Header />
+    <main className="container">
+      <TopNav />
+      <hr className="hr" />
 
-      <section className="max-w-6xl mx-auto p-6">
-  <div className="flex justify-between items-center mb-6">
-    <h1 className="text-xl font-bold text-gray-900">Projects & Work</h1>
-    
-    {/* Search bar */}
-    <div className="flex items-center">
-      <div className="relative">
-          <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
-            <FiSearch />
-          </span>
-          <input
-            type="text"
-            placeholder="ค้นหา: ชื่อผลงาน หรือ ชื่อผู้วิจัย"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="pl-10 pr-4 py-2 rounded-lg border border-gray-500 text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
-      <button
-        onClick={() => router.push(`/Admin/search?keyword=${query}`)}
-        className="bg-blue-500 text-white px-10 py-2 rounded-lg ml-1 hover:bg-blue-600"
-      >
-        ค้นหาขั้นสูง
-      </button>
-    </div>
-  </div>
+      <h2 className="section-title">Projects &amp; Work</h2>
+      <SearchBar />
 
-  {/* Card grid */}
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-    {projects.map((p, index) => (
-      <Card key={index} title={p.title} image={p.image} year={p.year} />
-    ))}
-  </div>
-</section>
+      <div className="grid">
+        {items.map((p) => <ExternalCard key={p.id} pub={p} />)}
+      </div>
     </main>
   );
 }
