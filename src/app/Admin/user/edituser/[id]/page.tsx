@@ -1,15 +1,16 @@
 "use client";
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import TopNav from "../../../../components/TopNav"; // ใช้ alias "@/components" สั้นกว่า
+import TopNav from "../../../../components/TopNav";
 import { mockUsers } from "../../../../lib/data";
+
+type FieldChange =
+  React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>;
 
 export default function EditUserPage() {
   const params = useParams();
   const router = useRouter();
   const userId = Number(params.id);
-
-  // หา user จาก mock data
   const user = mockUsers.find((u) => u.id === userId);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -26,18 +27,18 @@ export default function EditUserPage() {
 
   if (!user) {
     return (
-      <div className="p-6">
+      <main className="container">
         <TopNav />
-        <p>ไม่พบผู้ใช้งาน</p>
-      </div>
+        <div className="paper mt-4">
+          <p className="text-slate-700">ไม่พบผู้ใช้งาน</p>
+        </div>
+      </main>
     );
   }
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: FieldChange) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((s) => ({ ...s, [name]: value }));
   };
 
   const handleUpdate = () => {
@@ -45,130 +46,195 @@ export default function EditUserPage() {
     router.push("/Admin/user");
   };
 
+  // utilities
+  const ctrl =
+    "h-11 w-full rounded-[10px] border border-[var(--line)] bg-white px-3 text-[15px] text-slate-700 outline-none disabled:bg-slate-100 disabled:text-slate-400";
+  const label = "text-[13px] font-semibold text-slate-600";
+
   return (
     <main className="container">
-          <TopNav />
-    <div className="min-h-screen ">
-      
-      <div className="max-w-6xl mx-auto p-6 flex gap-6">
-        {/* Profile Picture */}
-        <div className="w-1/4 flex flex-col items-center bg-white p-4 rounded-lg shadow">
-          <div className="w-40 h-40 bg-gray-200 flex items-center justify-center rounded-md">
-            <span className="text-gray-400">🖼</span>
-          </div>
-          <button className="mt-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 text-sm">
-            Change Profile
+      <TopNav />
+
+      {/* กรอบหลัก */}
+      <section className="mx-auto mt-6 max-w-[1120px]">
+        <div className="relative rounded-[20px] border border-[#E6E8EC] bg-white p-8 shadow-[0_10px_28px_rgba(17,24,39,.08)]">
+          <h2 className="mb-6 text-[22px] font-extrabold text-slate-900">ข้อมูลส่วนบุคคล</h2>
+
+          {/* ปุ่มแก้ไข ขวาบน */}
+          <button
+            type="button"
+            onClick={() => setIsEditing((v) => !v)}
+            title="แก้ไข"
+            className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" stroke="#ef7c3c" fill="#ef7c3c"/>
+              <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#ef7c3c"/>
+            </svg>
           </button>
+
+          {/* ====== เลย์เอาต์หลัก: ใช้ FLEX แทน GRID ====== */}
+          <div className="flex flex-col gap-8 md:flex-row md:items-start">
+            {/* ซ้าย: การ์ดโปรไฟล์ (ความกว้างคงที่) */}
+            <aside className="w-full md:w-[280px]">
+              <div className="rounded-[16px] border border-[var(--line)] bg-white p-5 shadow-sm">
+                <div className="flex flex-col items-center">
+                  <div className="mb-4 flex h-44 w-44 items-center justify-center rounded-[12px] bg-slate-200">
+                    <span className="text-2xl text-slate-400">🖼</span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!isEditing}
+                    className="inline-flex items-center gap-2 rounded-[10px] border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <span>🖼️</span> Change Profile
+                  </button>
+                </div>
+              </div>
+            </aside>
+
+            {/* ขวา: ฟอร์ม (กินพื้นที่ที่เหลือทั้งหมด) */}
+            <div className="min-w-0 flex-1">
+              <div className="rounded-[16px] border border-[var(--line)] bg-white p-5 shadow-sm">
+                {/* กริดอินพุต 3 คอลัมน์บน md+, บนมือถือ 1 คอลัมน์ */}
+                <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-3">
+                  {/* ชื่อ */}
+                  <div className="flex flex-col gap-1">
+                    <label className={label}>ชื่อ-นามสกุล</label>
+                    <input
+                      className={ctrl}
+                      type="text"
+                      name="name"
+                      placeholder="ชื่อ - นามสกุล"
+                      value={formData.name}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+
+                  {/* วันเกิด */}
+                  <div className="flex flex-col gap-1">
+                    <label className={label}>วันเกิด</label>
+                    <input
+                      className={ctrl}
+                      type="date"
+                      name="birthDate"
+                      value={formData.birthDate}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+
+                  {/* เบอร์โทร */}
+                  <div className="flex flex-col gap-1">
+                    <label className={label}>เบอร์โทร</label>
+                    <input
+                      className={ctrl}
+                      type="text"
+                      name="phone"
+                      placeholder="(555) 123-4519"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+
+                  {/* ตำแหน่งงาน */}
+                  <div className="flex flex-col gap-1">
+                    <label className={label}>ตำแหน่งงาน</label>
+                    <select
+                      className={ctrl}
+                      name="position"
+                      value={formData.position}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    >
+                      <option>Teacher</option>
+                      <option>Student</option>
+                      <option>Admin</option>
+                    </select>
+                  </div>
+
+                  {/* Email */}
+                  <div className="flex flex-col gap-1">
+                    <label className={label}>Email</label>
+                    <input
+                      className={ctrl}
+                      type="email"
+                      name="email"
+                      placeholder="user@example.com"
+                      value={formData.email}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+
+                  {/* สาขาวิชา/สังกัด */}
+                  <div className="flex flex-col gap-1">
+                    <label className={label}>สาขาวิชา/สังกัด</label>
+                    <input
+                      className={ctrl}
+                      type="text"
+                      name="department"
+                      placeholder="เช่น Computer Science"
+                      value={formData.department}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+
+                  {/* เพศ */}
+                  <div className="flex flex-col gap-1">
+                    <label className={label}>เพศ</label>
+                    <select
+                      className={ctrl}
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    >
+                      <option>Male</option>
+                      <option>Female</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+
+                  {/* ที่อยู่ — กิน 2 คอลัมน์ให้กว้างอ่านง่าย */}
+                  <div className="flex flex-col gap-1 md:col-span-2">
+                    <label className={label}>ที่อยู่</label>
+                    <input
+                      className={ctrl}
+                      type="text"
+                      name="address"
+                      placeholder="ที่อยู่ปัจจุบัน"
+                      value={formData.address}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+
+                  {/* ปุ่ม Update กึ่งกลางเต็มแถวล่าง */}
+                  <div className="md:col-span-3 mt-2 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleUpdate}
+                      disabled={!isEditing}
+                      className={`h-11 w-[220px] rounded-[10px] px-6 font-semibold text-white transition ${
+                        isEditing
+                          ? "bg-emerald-500 hover:bg-emerald-600"
+                          : "cursor-not-allowed bg-slate-300"
+                      }`}
+                    >
+                      Update
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* ====== /เลย์เอาต์หลัก ====== */}
         </div>
-
-        {/* ข้อมูลส่วนบุคคล */}
-        <div className="flex-1 bg-white p-6 rounded-lg shadow relative">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold">ข้อมูลส่วนบุคคล</h2>
-            <button
-              className="bg-black text-white p-2 rounded-md hover:bg-gray-800"
-              onClick={() => setIsEditing(!isEditing)}
-              title="แก้ไข"
-            >
-              ✏️
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              name="name"
-              placeholder="ชื่อ - นามสกุล"
-              value={formData.name}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="border border-gray-300 text-gray-700 rounded-md p-2"
-            />
-            <input
-              type="date"
-              name="birthDate"
-              value={formData.birthDate}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="border border-gray-300 text-gray-700 rounded-md p-2"
-            />
-            <input
-              type="text"
-              name="phone"
-              placeholder="เบอร์โทร"
-              value={formData.phone}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="border border-gray-300 text-gray-700 rounded-md p-2"
-            />
-            <select
-              name="position"
-              value={formData.position}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="border border-gray-300 text-gray-700 rounded-md p-2"
-            >
-              <option>Teacher</option>
-              <option>Student</option>
-              <option>Admin</option>
-            </select>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="border border-gray-300 text-gray-700 rounded-md p-2"
-            />
-            <input
-              type="text"
-              name="department"
-              placeholder="สาขาวิชา/สังกัด"
-              value={formData.department}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="border border-gray-300 text-gray-700 rounded-md p-2"
-            />
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="border border-gray-300 text-gray-700 rounded-md p-2"
-            >
-              <option>Male</option>
-              <option>Female</option>
-              <option>Other</option>
-            </select>
-            <input
-              type="text"
-              name="address"
-              placeholder="ที่อยู่"
-              value={formData.address}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="border border-gray-300 text-gray-700 rounded-md p-2"
-            />
-          </div>
-
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={handleUpdate}
-              disabled={!isEditing}
-              className={`px-6 py-2 rounded-md text-white ${
-                isEditing
-                  ? "bg-green-500 hover:bg-green-600"
-                  : "bg-gray-300 cursor-not-allowed"
-              }`}
-            >
-              Update
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      </section>
     </main>
-    
   );
 }
