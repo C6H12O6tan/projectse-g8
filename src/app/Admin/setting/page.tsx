@@ -1,14 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import TopNav from "../../../components/TopNav";
+import TopNav from "../../components/TopNav";
 
-type FieldChange =
-  React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>;
-
-export default function AddUserPage() {
-  const router = useRouter();
-
+export default function SettingPage() {
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -16,52 +11,47 @@ export default function AddUserPage() {
     birthDate: "",
     position: "Teacher",
     department: "",
-    gender: "Male",
+    gender: "Female",
     address: "",
   });
 
-  const handleChange = (e: FieldChange) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((s) => ({ ...s, [name]: value }));
   };
 
-  const handleAdd = () => {
-    const missing: string[] = [];
-    if (!formData.name) missing.push("ชื่อ - นามสกุล");
-    if (!formData.birthDate) missing.push("วันเกิด");
-    if (!formData.phone) missing.push("เบอร์โทร");
-    if (!formData.email) missing.push("Email");
-    if (!formData.department) missing.push("สาขาวิชา/สังกัด");
-    if (!formData.address) missing.push("ที่อยู่");
-
-    if (missing.length) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน:\n- " + missing.join("\n- "));
-      return;
-    }
-
-    alert("เพิ่มผู้ใช้สำเร็จ ✅\n" + JSON.stringify(formData, null, 2));
-    router.push("/Admin/user");
+  const handleUpdate = () => {
+    alert("อัปเดตข้อมูลสำเร็จ ✅\n" + JSON.stringify(formData, null, 2));
   };
 
-  // สไตล์อินพุต/เลเบลให้ตรงกันกับหน้าแก้ไข
   const ctrl =
-    "h-11 w-full rounded-[10px] border border-[var(--line)] bg-white px-3 text-[15px] text-slate-700 outline-none";
+    "h-11 w-full rounded-[10px] border border-[var(--line)] bg-white px-3 text-[15px] text-slate-700 outline-none disabled:bg-slate-100 disabled:text-slate-400";
   const label = "text-[13px] font-semibold text-slate-600";
 
   return (
     <main className="container">
       <TopNav />
 
-      {/* กรอบหลักแบบ paper ให้เหมือนหน้า edit */}
       <section className="mx-auto mt-6 max-w-[1120px]">
         <div className="relative rounded-[20px] border border-[#E6E8EC] bg-white p-8 shadow-[0_10px_28px_rgba(17,24,39,.08)]">
           <h2 className="mb-6 text-[22px] font-extrabold text-slate-900">
-            เพิ่มข้อมูลผู้ใช้ใหม่
+            ข้อมูลส่วนบุคคล
           </h2>
 
-          {/* เลย์เอาต์หลัก: รูปซ้ายคงที่ / ฟอร์มขวายืดเต็ม */}
+          {/* ปุ่มแก้ไข */}
+          <button
+            type="button"
+            onClick={() => setIsEditing((v) => !v)}
+            title="แก้ไข"
+            className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+          >
+            ✏️
+          </button>
+
           <div className="flex flex-col gap-8 md:flex-row md:items-start">
-            {/* การ์ดรูปภาพ (ซ้าย) */}
+            {/* การ์ดรูปภาพ */}
             <aside className="w-full md:w-[280px]">
               <div className="rounded-[16px] border border-[var(--line)] bg-white p-5 shadow-sm">
                 <div className="flex flex-col items-center">
@@ -70,33 +60,33 @@ export default function AddUserPage() {
                   </div>
                   <button
                     type="button"
-                    className="inline-flex items-center gap-2 rounded-[10px] border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    disabled={!isEditing}
+                    className="inline-flex items-center gap-2 rounded-[10px] border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <span>🖼️</span> Upload Profile
+                    Change Profile
                   </button>
                 </div>
               </div>
             </aside>
 
-            {/* ฟอร์ม (ขวา) */}
+            {/* ฟอร์ม */}
             <div className="min-w-0 flex-1">
               <div className="rounded-[16px] border border-[var(--line)] bg-white p-5 shadow-sm">
-                {/* กริด 3 คอลัมน์ (เหมือนหน้า edit) */}
-                <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-3">
-                  {/* ชื่อ-นามสกุล */}
+                <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+                  {/* Name */}
                   <div className="flex flex-col gap-1">
                     <label className={label}>ชื่อ-นามสกุล</label>
                     <input
                       className={ctrl}
                       type="text"
                       name="name"
-                      placeholder="ชื่อ - นามสกุล"
                       value={formData.name}
                       onChange={handleChange}
+                      disabled={!isEditing}
                     />
                   </div>
 
-                  {/* วันเกิด */}
+                  {/* Birth Date */}
                   <div className="flex flex-col gap-1">
                     <label className={label}>วันเกิด</label>
                     <input
@@ -105,23 +95,24 @@ export default function AddUserPage() {
                       name="birthDate"
                       value={formData.birthDate}
                       onChange={handleChange}
+                      disabled={!isEditing}
                     />
                   </div>
 
-                  {/* เบอร์โทร */}
+                  {/* Phone */}
                   <div className="flex flex-col gap-1">
                     <label className={label}>เบอร์โทร</label>
                     <input
                       className={ctrl}
                       type="text"
                       name="phone"
-                      placeholder="(555) 123-4519"
                       value={formData.phone}
                       onChange={handleChange}
+                      disabled={!isEditing}
                     />
                   </div>
 
-                  {/* ตำแหน่งงาน */}
+                  {/* Position */}
                   <div className="flex flex-col gap-1">
                     <label className={label}>ตำแหน่งงาน</label>
                     <select
@@ -129,6 +120,7 @@ export default function AddUserPage() {
                       name="position"
                       value={formData.position}
                       onChange={handleChange}
+                      disabled={!isEditing}
                     >
                       <option>Teacher</option>
                       <option>Student</option>
@@ -143,26 +135,26 @@ export default function AddUserPage() {
                       className={ctrl}
                       type="email"
                       name="email"
-                      placeholder="user@example.com"
                       value={formData.email}
                       onChange={handleChange}
+                      disabled={!isEditing}
                     />
                   </div>
 
-                  {/* สาขาวิชา/สังกัด */}
+                  {/* Department */}
                   <div className="flex flex-col gap-1">
                     <label className={label}>สาขาวิชา/สังกัด</label>
                     <input
                       className={ctrl}
                       type="text"
                       name="department"
-                      placeholder="เช่น Computer Science"
                       value={formData.department}
                       onChange={handleChange}
+                      disabled={!isEditing}
                     />
                   </div>
 
-                  {/* เพศ */}
+                  {/* Gender */}
                   <div className="flex flex-col gap-1">
                     <label className={label}>เพศ</label>
                     <select
@@ -170,6 +162,7 @@ export default function AddUserPage() {
                       name="gender"
                       value={formData.gender}
                       onChange={handleChange}
+                      disabled={!isEditing}
                     >
                       <option>Male</option>
                       <option>Female</option>
@@ -177,32 +170,37 @@ export default function AddUserPage() {
                     </select>
                   </div>
 
-                  {/* ที่อยู่ — กิน 2 คอลัมน์ให้กว้าง */}
+                  {/* Address */}
                   <div className="flex flex-col gap-1 md:col-span-2">
                     <label className={label}>ที่อยู่</label>
                     <input
                       className={ctrl}
                       type="text"
                       name="address"
-                      placeholder="ที่อยู่ปัจจุบัน"
                       value={formData.address}
                       onChange={handleChange}
+                      disabled={!isEditing}
                     />
                   </div>
+                </div>
 
-                  {/* ปุ่ม Add User กลางแถวล่าง */}
-                  <div className="md:col-span-3 mt-2 flex justify-center">
-                    <button
-                      onClick={handleAdd}
-                      className="h-11 w-[220px] rounded-[10px] bg-emerald-500 px-6 font-semibold text-white transition hover:bg-emerald-600"
-                    >
-                      Add User
-                    </button>
-                  </div>
+                {/* Update button */}
+                <div className="mt-7 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleUpdate}
+                    disabled={!isEditing}
+                    className={`h-11 w-[220px] rounded-[10px] px-6 font-semibold text-white transition ${
+                      isEditing
+                        ? "bg-emerald-500 hover:bg-emerald-600"
+                        : "cursor-not-allowed bg-slate-300"
+                    }`}
+                  >
+                    Update
+                  </button>
                 </div>
               </div>
             </div>
-            {/* /ฟอร์ม */}
           </div>
         </div>
       </section>
