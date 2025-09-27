@@ -48,9 +48,12 @@ export default function UserPage() {
               }}
               className="border border-gray-300 rounded-md p-2"
             />
-            <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-              + เพิ่มบัญชี
-            </button>
+            <button
+  onClick={() => router.push("/Admin/user/adduser")}
+  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+>
+  + เพิ่มบัญชี
+</button>
           </div>
         </div>
 
