@@ -2,14 +2,17 @@
 
 /** โทนหลักของ PSU (ใช้กับ TopBarTeacher และองค์ประกอบขาว) */
 export const PSU = {
-  navy:   "#1F3A8A",   // สีหลัก (ปุ่ม/หัวข้อ)
-  sky:    "#3B82F6",   // เส้นเน้น/ปุ่มรอง
+  navy: "#1F3A8A",
+  sky: "#3B82F6",
   onNavy: "#FFFFFF",
-  text:   "#111827",
-  subtext:"#6B7280",
-  bg:     "#F7F8FA",
+  text: "#111827",
+  subtext: "#6B7280",
+  bg: "#F7F8FA",
   cardBorder: "#E5E7EB",
+  cardShadow: "0 2px 10px rgba(17,24,39,.06)",
+  radius: 14
 };
+
 
 /** สีตามบทบาท (ใช้กับ RoleTopBar / หน้า role-group เดิม) */
 export const ROLE_COLORS = {

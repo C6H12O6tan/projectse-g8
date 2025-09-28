@@ -1,24 +1,25 @@
 "use client";
+
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
+import Stack from "@mui/material/Stack";
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
-import CardMedia from "@mui/material/CardMedia";
-import CardContent from "@mui/material/CardContent";
-import Chip from "@mui/material/Chip";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
-import TopBarTeacher from "@/components/TopBarTeacher";
-import { PSU } from "@/theme/brand";
-import Link from "next/link";
 
-const MY = [
-  { id: "p1", title: "PHENOROBOT", img: "/mock/1.jpg", tag: "UPDATE 2025" },
-  { id: "p2", title: "AR for Classroom", img: "/mock/2.jpg", tag: "UPDATE 2024" },
-  { id: "p3", title: "Learning Analytics", img: "/mock/3.jpg", tag: "UPDATE 2023" },
-  { id: "p4", title: "Digital Learning in HE", img: "/mock/4.jpg", tag: "UPDATE 2025" },
-  { id: "p5", title: "Academic Research", img: "/mock/5.jpg", tag: "UPDATE 2024" },
+import TopBarTeacher from "@/components/TopBarTeacher";
+import ProjectThumb from "@/components/cards/ProjectThumb";
+import { PSU } from "@/theme/brand";
+
+type MyCard = { id: string; title: string; img?: string; tag?: string; author?: string };
+
+const MY: MyCard[] = [
+  { id: "p1", title: "PHENOROBOT", img: "/mock/1.jpg", tag: "UPDATE: 2025", author: "ดร.ธีระ ภัทรพงษ์นันท์" },
+  { id: "p2", title: "AR for Classroom", img: "/mock/2.jpg", tag: "UPDATE: 2024", author: "ดร.สมชาย จินทร์ทอง" },
+  { id: "p3", title: "Learning Analytics", img: "/mock/3.jpg", tag: "UPDATE: 2023", author: "ดร.ปริณา ตั้งมั่น" },
+  { id: "p4", title: "Digital Learning in HE", img: "/mock/4.jpg", tag: "UPDATE: 2025", author: "ดร.บุศบุศ กภักดีผล" },
+  { id: "p5", title: "Academic Research", img: "/mock/5.jpg", tag: "UPDATE: 2024", author: "ดร.กิตติพล วงศ์หิรัญ" },
 ];
 
 export default function TeacherProjectList() {
@@ -37,34 +38,32 @@ export default function TeacherProjectList() {
         <Grid container spacing={2}>
           {/* การ์ด New Project */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <Card elevation={0} sx={{ border: `2px dashed ${PSU.cardBorder}`, borderRadius: 3 }}>
-              <CardActionArea href="/teacher/project/new" sx={{ height: 212, display: "grid", placeItems: "center" }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 2,
+                border: `2px dashed ${PSU.cardBorder}`,
+                height: 212,
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              <CardActionArea href="/teacher/project/new" sx={{ height: "100%", width: "100%", display: "grid", placeItems: "center" }}>
                 <Typography fontWeight={800} color={PSU.subtext}>+ NEW PROJECT…</Typography>
               </CardActionArea>
             </Card>
           </Grid>
 
+          {/* รายการโปรเจกต์ */}
           {MY.map((it) => (
             <Grid key={it.id} size={{ xs: 12, sm: 6, md: 4 }}>
-              <Card elevation={0} sx={{ border: `1px solid ${PSU.cardBorder}`, borderRadius: 3 }}>
-                <CardActionArea href={`/teacher/project/${it.id}`}>
-                  <div style={{ position: "relative" }}>
-                    <CardMedia component="img" height="140" image={it.img} alt={it.title} />
-                    <Chip
-                      label={it.tag}
-                      size="small"
-                      sx={{ position: "absolute", left: 12, top: 12, bgcolor: PSU.navy, color: PSU.onNavy }}
-                    />
-                  </div>
-                  <CardContent sx={{ minHeight: 72 }}>
-                    <Typography variant="body2" fontWeight={800}>{it.title}</Typography>
-                  </CardContent>
-                </CardActionArea>
-                <Stack direction="row" spacing={1} sx={{ px: 2, pb: 2 }}>
-                  <Button size="small" component={Link as any} href={`/teacher/project/${it.id}`}>View</Button>
-                  <Button size="small" component={Link as any} href={`/teacher/project/${it.id}/edit`}>Edit</Button>
-                </Stack>
-              </Card>
+              <ProjectThumb
+                href={`/teacher/project/${it.id}`}
+                image={it.img}
+                title={it.title}
+                author={it.author}
+                tag={it.tag}
+              />
             </Grid>
           ))}
         </Grid>
