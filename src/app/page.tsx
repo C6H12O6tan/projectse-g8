@@ -1,6 +1,2 @@
-import { redirect } from "next/navigation";
-
-export default function Home() {
-  redirect("/validate");
-  return null;
-}
+// src/app/page.tsx
+export { default } from "./(public)/page";

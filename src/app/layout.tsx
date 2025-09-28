@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Providers from "./providers";
 
 export const metadata: Metadata = {
-  title: "ระบบบริหารจัดการผลงานตีพิมพ์",
-  description: "หน้ารวมผลงานตีพิมพ์ (Publications)",
+  title: "SE G8 | Frontend",
+  description: "Frontend-only (MUI)",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="th">
-      <body className="min-h-screen bg-gradient-to-b from-white to-slate-50 antialiased">
-        {children}
+      <body>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
