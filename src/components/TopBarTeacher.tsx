@@ -35,11 +35,10 @@ export default function TopBarTeacher() {
     <AppBar position="sticky" elevation={1} sx={{ bgcolor: "#fff", color: PSU.text }}>
       <div className="container">
         <Toolbar disableGutters sx={{ gap: 2, minHeight: 64 }}>
-          {/* โลโก้ซ้าย (ใช้ /public/logo-psu.png ถ้ามี) */}
+          {/* โลโก้ซ้าย (ใช้ /public/psubrand.png ถ้ามี) */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mr: 1 }}>
-            {/* fallback เป็นตัวอักษรถ้าไม่มีไฟล์รูป */}
-            <Box sx={{ position: "relative", width: 92, height: 24 }}>
-              <Image src="/logo-psu.png" alt="PSU" fill sizes="92px" style={{ objectFit:"contain" }} />
+            <Box sx={{ position: "relative", width: 100, height: 35 }}>
+              <Image src="/psubrand.png" alt="PSU" fill sizes="92px" style={{ objectFit: "contain" }} />
             </Box>
             <Typography sx={{ fontWeight: 700 }}>ระบบบริหารจัดการผลงานตีพิมพ์</Typography>
           </Box>
