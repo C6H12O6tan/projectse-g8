@@ -3,7 +3,7 @@ import "./globals.css";
 import Providers from "./providers";
 
 export const metadata: Metadata = {
-  title: "SE G8 | Frontend",
+  title: "Publication Management System",
   description: "Frontend-only (MUI)",
 };
 
