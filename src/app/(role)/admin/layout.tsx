@@ -4,30 +4,16 @@ import { redirect } from "next/navigation";
 import { supabaseRSC } from "@/lib/supabase/rsc";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const supabase = await supabaseRSC();
+  const sb = await supabaseRSC();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) redirect("/login");
 
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const { data: isAdmin } = await sb
+    .from("admin_whitelist")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-    if (!user) {
-      redirect("/login");
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user!.id)
-      .single();
-
-    if (!profile || profile.role !== "admin") {
-      redirect("/login");
-    }
-  } catch {
-    // ถ้าเกิด error ระหว่างตรวจสิทธิ์ ป้องกันด้วยการพาไปล็อกอินใหม่
-    redirect("/login");
-  }
-
+  if (!isAdmin) redirect("/login");
   return <>{children}</>;
 }

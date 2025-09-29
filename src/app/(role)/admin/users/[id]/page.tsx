@@ -1,111 +1,75 @@
-"use client";
+// src/app/admin/users/page.tsx
+// Server Component: ดึงข้อมูลจาก /api/admin/users แบบ no-store และรองรับเคสตารางว่าง
+export const dynamic = "force-dynamic";
 
-import TopBarAdmin from "@/components/TopBarAdmin";
-import {
-  Avatar, Box, Button, Container, Divider, Grid, IconButton, MenuItem,
-  Paper, TextField, Typography
-} from "@mui/material";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import EditIcon from "@mui/icons-material/Edit";
+type UserRow = {
+  id: string;
+  fullname?: string | null;
+  email: string;
+  phone?: string | null;
+};
 
-// ตัวอย่างรายการตำแหน่ง/เพศ (mock)
-const POSITIONS = ["Teacher", "Officer", "Admin"];
-const GENDERS = ["Female", "Male", "Other"];
+async function getUsers(): Promise<UserRow[]> {
+  const res = await fetch("/api/admin/users", { cache: "no-store" });
+  // ถ้า API ตอบเป็น error message ให้โยนข้อความออกไปให้ UI โชว์
+  if (!res.ok) {
+    let msg = "";
+    try {
+      const j = await res.json();
+      msg = j?.error || JSON.stringify(j);
+    } catch {
+      msg = await res.text();
+    }
+    throw new Error(msg || `HTTP ${res.status}`);
+  }
+  const data = (await res.json()) as { users?: UserRow[] };
+  return data.users ?? [];
+}
 
-export default function AdminUserEditPage() {
+export default async function AdminUsersPage() {
+  let users: UserRow[] = [];
+  let errorMsg = "";
+
+  try {
+    users = await getUsers();
+  } catch (e: any) {
+    errorMsg = e?.message || "โหลดข้อมูลไม่สำเร็จ";
+  }
+
   return (
-    <>
-      <TopBarAdmin />
-      <main>
-        <Container className="container" sx={{ py: 4 }}>
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 2,
-              border: "1px solid #E7EDF3",
-              boxShadow: "0 2px 8px rgba(10,37,64,.05)",
-              bgcolor: "#F7FAFC"
-            }}
-          >
-            <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
-              ข้อมูลส่วนบุคคล
-            </Typography>
+    <div className="mx-auto max-w-5xl w-full px-4 py-6">
+      <h1 className="text-2xl font-bold mb-4">บัญชีผู้ใช้งาน</h1>
 
-            <Grid container spacing={3}>
-              {/* ฝั่งซ้าย: รูปโปรไฟล์ */}
-              <Grid size= {{xs: 12, md: 3}}>
-                <Box sx={{ display: "grid", gap: 2 }}>
-                  <Box sx={{ display: "grid", placeItems: "center" }}>
-                    <Avatar sx={{ width: 180, height: 180, bgcolor: "#E0E6EF" }} />
-                  </Box>
-                  <Button variant="outlined" fullWidth>Change Profile</Button>
-                </Box>
-              </Grid>
+      {errorMsg ? (
+        <p className="text-red-600">{errorMsg}</p>
+      ) : users.length === 0 ? (
+        <div className="text-gray-500">ไม่มีข้อมูลผู้ใช้งาน</div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50 text-gray-600">
+              <tr>
+                <th className="px-4 py-3 text-left">ชื่อ-สกุล</th>
+                <th className="px-4 py-3 text-left">Phone Number</th>
+                <th className="px-4 py-3 text-left">Email</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {users.map((u) => (
+                <tr key={u.id} className="hover:bg-gray-50">
+                  {/* ✅ ถ้าไม่มี fullname ให้ใช้ email */}
+                  <td className="px-4 py-3">{u.fullname || u.email}</td>
 
-              {/* ฝั่งขวา: ฟอร์ม */}
-              <Grid size= {{xs: 12, md: 9}}>
-                <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: "#fff" }}>
-                  <Grid container spacing={2}>
-                    <Grid size= {{xs: 12, md: 6}}>
-                      <TextField fullWidth label="ชื่อ-นามสกุล" />
-                    </Grid>
-                    <Grid size= {{xs: 12, md: 6}}>
-                      <TextField
-                        fullWidth
-                        label="วันเกิด"
-                        placeholder="12-05-1912"
-                        InputProps={{
-                          endAdornment: (
-                            <IconButton edge="end" size="small">
-                              <CalendarMonthIcon fontSize="small" />
-                            </IconButton>
-                          )
-                        }}
-                      />
-                    </Grid>
+                  {/* ✅ ถ้า phone เป็น null/ว่าง ให้แสดง '-' */}
+                  <td className="px-4 py-3">{u.phone || "-"}</td>
 
-                    <Grid size= {{xs: 12, md: 6}}>
-                      <TextField fullWidth label="เบอร์โทร" placeholder="+880 12345-6789" />
-                    </Grid>
-                    <Grid size= {{xs: 12, md: 6}}>
-                      <TextField select fullWidth label="ตำแหน่งงาน" defaultValue="Teacher">
-                        {POSITIONS.map((p) => (
-                          <MenuItem key={p} value={p}>{p}</MenuItem>
-                        ))}
-                      </TextField>
-                    </Grid>
-
-                    <Grid size= {{xs: 12, md: 6}}>
-                      <TextField fullWidth label="Email" />
-                    </Grid>
-                    <Grid size= {{xs: 12, md: 6}}>
-                      <TextField fullWidth label="สาขาวิชา/สังกัด" />
-                    </Grid>
-
-                    <Grid size= {{xs: 12, md: 6}}>
-                      <TextField select fullWidth label="เพศ" defaultValue="Female">
-                        {GENDERS.map((g) => (
-                          <MenuItem key={g} value={g}>{g}</MenuItem>
-                        ))}
-                      </TextField>
-                    </Grid>
-                    <Grid size= {{xs: 12, md: 6}}>
-                      <TextField fullWidth label="ที่อยู่" placeholder="ABC, adc- 1250, Dhaka, Bangladesh" />
-                    </Grid>
-                  </Grid>
-
-                  <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-                    <Button variant="contained" sx={{ minWidth: 160, bgcolor: "#2BB673", "&:hover": { bgcolor: "#249B62" } }}>
-                      Update
-                    </Button>
-                  </Box>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Container>
-      </main>
-    </>
+                  <td className="px-4 py-3">{u.email}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }

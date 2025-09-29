@@ -1,32 +1,19 @@
-// src/app/api/admin/history/route.ts
-import { NextResponse, type NextRequest } from "next/server";
-import { requireAdminFromRequest } from "@/lib/auth/requireAdminFromReq";
+import { NextResponse } from "next/server";
+import { supabaseFromRequest } from "@/lib/supabase/route";
 
-// GET /api/admin/history
-export async function GET(req: NextRequest) {
-  const gate = await requireAdminFromRequest(req);
-  if (!gate.ok) return NextResponse.json({ message: "unauthorized" }, { status: gate.status });
+export async function GET(request: Request) {
+  const { client } = supabaseFromRequest(request as any);
+  const { data: me } = await client.auth.getUser();
+  if (!me?.user) return NextResponse.json({ message: "unauthorized" }, { status: 401 });
 
-  const { client, response } = gate;
+  const { data: myProfile } = await client.from("profiles").select("role").eq("id", me.user.id).single();
+  if (myProfile?.role !== "admin") return NextResponse.json({ message: "forbidden" }, { status: 403 });
 
-  // ตัวอย่าง: ดึงประวัติจากตาราง publications ร่วมกับเจ้าของงาน
-  // ปรับชื่อคอลัมน์ให้ตรง schema จริงของคุณ
   const { data, error } = await client
-    .from("publications")
-    .select(`
-      id,
-      title,
-      amount,          -- ถ้าไม่มีให้ลบออก
-      owner:profiles!publications_owner_fkey(id, fullname, email), -- ชื่อ fkey ปรับตามจริง
-      created_at
-    `)
-    .order("created_at", { ascending: false })
-    .limit(100);
+    .from("history_logs")
+    .select("id,name,uid,address,amount,created_at")
+    .order("created_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: response.headers });
-
-  return new NextResponse(JSON.stringify({ history: data ?? [] }), {
-    status: 200,
-    headers: response.headers,
-  });
+  if (error) return NextResponse.json({ message: error.message }, { status: 400 });
+  return NextResponse.json(data ?? []);
 }

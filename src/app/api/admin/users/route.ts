@@ -1,25 +1,20 @@
-// src/app/api/admin/users/route.ts
-import { NextResponse, type NextRequest } from "next/server";
-import { requireAdminFromRequest } from "@/lib/auth/requireAdminFromReq";
+import { NextResponse } from "next/server";
+import { supabaseFromRequest } from "@/lib/supabase/route";
 
-// GET /api/admin/users
-export async function GET(req: NextRequest) {
-  const gate = await requireAdminFromRequest(req);
-  if (!gate.ok) return NextResponse.json({ error: "forbidden" }, { status: gate.status });
+export async function GET(request: Request) {
+  const { client } = supabaseFromRequest(request as any);
+  const { data: me } = await client.auth.getUser();
+  if (!me?.user) return NextResponse.json({ message: "unauthorized" }, { status: 401 });
 
-  const { client, response } = gate;
+  // ตรวจ role admin ในโปรไฟล์ (ถ้าต้องการ)
+  const { data: myProfile } = await client.from("profiles").select("role").eq("id", me.user.id).single();
+  if (myProfile?.role !== "admin") return NextResponse.json({ message: "forbidden" }, { status: 403 });
 
-  // ดึงรายการผู้ใช้จาก profiles (ปรับ field ตาม schema ที่มีจริง)
   const { data, error } = await client
     .from("profiles")
-    .select("id, fullname, phone, email")
-    .order("created_at", { ascending: false })
-    .limit(100);
+    .select("id,email,display_name,fullname,phone,created_at")
+    .order("created_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: response.headers });
-
-  return new NextResponse(JSON.stringify({ users: data ?? [] }), {
-    status: 200,
-    headers: response.headers, // สำคัญ: ส่ง cookies ที่ setAll กลับไป
-  });
+  if (error) return NextResponse.json({ message: error.message }, { status: 400 });
+  return NextResponse.json(data ?? []);
 }
