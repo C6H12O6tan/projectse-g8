@@ -1,21 +1,23 @@
-import { absoluteUrl } from "@/lib/absolute";
-import { serverAuthHeaders } from "@/lib/auth/headers";
-import AdminUsersClient from "./AdminUsersClient";
+// src/app/(role)/admin/users/page.tsx
+import { Box, Paper, Typography } from "@mui/material";
+import { absFetch } from "@/lib/absfetch";
+import UsersTable from "@/components/admin/UsersTable";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
-  const url = await absoluteUrl("/api/admin/users");
+  const res = await absFetch("/api/admin/users", { cache: "no-store" });
+  const data = (await res.json()) ?? [];
+  const rows = Array.isArray(data) ? data : [];
 
-  const res = await fetch(url, {
-    headers: await serverAuthHeaders(),
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const msg = await res.text();
-    return <p style={{ color: "crimson" }}>{msg || res.statusText}</p>;
-  }
-
-  const data = await res.json();
-  const rows = Array.isArray(data?.rows) ? data.rows : Array.isArray(data) ? data : [];
-  return <AdminUsersClient rows={rows} />;
+  return (
+    <Box>
+      <Typography variant="h5" fontWeight={800} sx={{ mb: 2 }}>
+        บัญชีผู้ใช้งาน
+      </Typography>
+      <Paper sx={{ p: 2 }}>
+        <UsersTable rows={rows} />
+      </Paper>
+    </Box>
+  );
 }

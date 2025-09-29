@@ -1,19 +1,16 @@
 // src/app/(role)/admin/layout.tsx
-import type { ReactNode } from "react";
-import { redirect } from "next/navigation";
-import { supabaseRSC } from "@/lib/supabase/rsc";
+import AppTopNav from "@/components/TopBarAdmin";
+import { Container, Box } from "@mui/material";
 
-export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const sb = await supabaseRSC();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: isAdmin } = await sb
-    .from("admin_whitelist")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!isAdmin) redirect("/login");
-  return <>{children}</>;
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="th">
+      <body>
+        <AppTopNav />
+        <Container maxWidth="lg">
+          <Box sx={{ py: 4 }}>{children}</Box>
+        </Container>
+      </body>
+    </html>
+  );
 }

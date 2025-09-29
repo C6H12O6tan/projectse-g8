@@ -1,29 +1,40 @@
 // src/lib/supabase/rsc.ts
-import "server-only";
-import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
+/**
+ * ใช้ใน Server Component (RSC) เท่านั้น — อ่าน cookie ได้อย่างเดียว
+ * ห้าม set cookie ใน RSC (Next จะเตือน) จึงทำ setAll เป็น no-op
+ */
 export async function supabaseRSC() {
-  const store = await cookies(); // Next.js app router cookies
-
-  const supabase = createServerClient(
+  const client = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        // ให้ SSR อ่าน cookie ปัจจุบันทั้งหมด
-        getAll() {
-          return store.getAll().map(c => ({ name: c.name, value: c.value ?? "" }));
+        // อ่านทั้งหมดจาก cookie store (ต้อง await ก่อน)
+        async getAll() {
+          const jar = await cookies();
+          const all = jar.getAll(); // -> { name: string; value: string }[]
+          // แปลงเป็นรูปแบบที่ @supabase/ssr ต้องการ
+          return all.map(
+            (c: { name: string; value: string }) => ({ name: c.name, value: c.value })
+          );
         },
-        // ให้ SSR เขียน cookie ที่ต้องอัปเดตกลับไป
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            store.set({ name, value, ...(options as CookieOptions) });
-          });
+        // ใน RSC ห้ามแก้ cookie: ทำเป็น no-op ไป
+        setAll(_cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
+          /* no-op: cannot set cookies in RSC */
         },
       },
     }
   );
 
-  return supabase;
+  return client;
+}
+
+/** helper: ดึง user ปัจจุบันจาก RSC ได้สะดวก */
+export async function currentUserRSC() {
+  const supabase = await supabaseRSC();
+  const { data } = await supabase.auth.getUser();
+  return data.user ?? null;
 }

@@ -1,43 +1,75 @@
-import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
-import Chip from "@mui/material/Chip";
-import Button from "@mui/material/Button";
-import TopBarTeacher from "@/components/TopBarTeacher";
-import { PSU } from "@/theme/brand";
+import { Card, CardContent, CardHeader, Typography, Stack, Divider, Box, Chip, Button } from "@mui/material";
+import { supabaseRSC } from "@/lib/supabase/rsc"; // ตัวที่คุณใช้บนฝั่ง Server Component
+import Link from "next/link";
 
-export default function TeacherProjectDetail({ params }: { params: { id: string } }) {
-  const { id } = params;
-  const data = { title: "Digital Learning in Higher Education", type:"วิจัย", year:2025, status:"เผยแพร่แล้ว", author:"Jane Cooper" };
+export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
+  const supabase = await supabaseRSC();
+
+  // โครง: projects + publications ใต้โปรเจค
+  const { data: project, error } = await supabase
+    .from("projects")
+    .select(`
+      id, owner, title, summary, updated_at, created_at,
+      publications:publications (
+        id, title, year, type, status, thumb_url, file_path, updated_at
+      )
+    `)
+    .eq("id", params.id)
+    .single();
+
+  if (error || !project) {
+    return <Typography color="error">ไม่พบโปรเจค หรือไม่มีสิทธิ์เข้าถึง</Typography>;
+  }
 
   return (
-    <main>
-      <TopBarTeacher />
-      <Container className="container" sx={{ py: 3 }}>
-        <Typography variant="h6" fontWeight={800} align="center" sx={{ mb: 2 }}>{data.title}</Typography>
-        <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
-          <Chip label={data.type} variant="outlined" />
-          <Chip label={`YEAR ${data.year}`} variant="outlined" />
-          <Chip label={data.status} color="success" variant="outlined" />
-        </Stack>
+    <Stack spacing={2}>
+      <Card>
+        <CardHeader
+          title={<Typography variant="h5" fontWeight={800}>{project.title}</Typography>}
+          subheader={
+            <Typography color="text.secondary" fontSize={14}>
+              อัปเดตล่าสุด: {new Date(project.updated_at ?? project.created_at).toLocaleString()}
+            </Typography>
+          }
+        />
+        <CardContent>
+          <Typography fontWeight={700} gutterBottom>สรุปโครงการ</Typography>
+          <Typography color="text.secondary">{project.summary || "-"}</Typography>
+        </CardContent>
+      </Card>
 
-        <Paper elevation={0} sx={{ p: 2, border:`1px solid ${PSU.cardBorder}`, borderRadius: 2, boxShadow: PSU.cardShadow }}>
-          <Typography variant="subtitle2" fontWeight={800} sx={{ mb: .5 }}>รายละเอียดผลงาน</Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            ผู้เขียน: {data.author} • สถานที่จัดเก็บ: คณะวิทยาศาสตร์ ม.อ.
-          </Typography>
-          <Typography variant="subtitle2" fontWeight={800}>บทคัดย่อ</Typography>
-          <Typography variant="body2" sx={{ mt: .5, whiteSpace: "pre-line" }}>
-            (ใส่บทคัดย่อจริงภายหลัง)
-          </Typography>
-
-          <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-            <Button variant="contained" href={`/teacher/project/${id}/edit`}>แก้ไขข้อมูล</Button>
-            <Button variant="outlined">ดาวน์โหลดไฟล์</Button>
+      <Card>
+        <CardHeader title={<Typography fontWeight={800}>ผลงานตีพิมพ์ในโปรเจคนี้</Typography>} />
+        <CardContent>
+          <Stack divider={<Divider />} spacing={2}>
+            {(project.publications ?? []).map((p: any) => (
+              <Box key={p.id} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography fontWeight={800} noWrap title={p.title}>{p.title}</Typography>
+                  <Typography color="text.secondary" fontSize={14}>
+                    ปี {p.year ?? "-"} • ประเภท {p.type ?? "-"}
+                  </Typography>
+                </Box>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip label={p.status ?? "draft"} size="small" />
+                  {p.file_path ? (
+                    <Button size="small" component="a" href={p.file_path} target="_blank" rel="noreferrer">
+                      เปิดไฟล์
+                    </Button>
+                  ) : null}
+                </Stack>
+              </Box>
+            ))}
+            {(!project.publications || project.publications.length === 0) && (
+              <Typography color="text.secondary">ยังไม่มีผลงานตีพิมพ์ในโปรเจคนี้</Typography>
+            )}
           </Stack>
-        </Paper>
-      </Container>
-    </main>
+        </CardContent>
+      </Card>
+
+      <Stack direction="row" spacing={1}>
+        <Button variant="contained" component={Link} href="/teacher/project">กลับรายการโปรเจค</Button>
+      </Stack>
+    </Stack>
   );
 }
