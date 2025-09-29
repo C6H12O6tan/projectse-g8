@@ -1,30 +1,19 @@
-"use client";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import RoleTopBar from "@/components/RoleTopBar";
+import TopBarTeacher from "@/components/TopBarTeacher";
 import Footer from "@/components/Footer";
-import { ROLE_COLORS } from "@/theme/brand";
-import ProjectForm, { ProjectPayload } from "@/components/teacher/ProjectForm";
+import NewPageClient from "./NewPageClient";
 
 export default function TeacherProjectNew() {
-  const C = ROLE_COLORS.teacher;
-  const onSubmit = (data: ProjectPayload) => {
-    // TODO: เชื่อมหลังบ้านภายหลัง
-    console.log("NEW submit", data);
-    alert("บันทึกแบบร่าง (จำลอง)");
-  };
-
   return (
     <main>
-      <RoleTopBar role="teacher" />
-      <div style={{ background: C.primary, color: C.onPrimary, borderBottom: `3px solid ${C.accent}` }}>
-        <Container className="container" style={{ paddingTop: 16, paddingBottom: 16 }}>
-          <Typography variant="h6" fontWeight={800}>อัปโหลดผลงานใหม่</Typography>
-        </Container>
-      </div>
-
+      <TopBarTeacher />
       <Container className="container" sx={{ py: 3 }}>
-        <ProjectForm mode="new" onSubmit={onSubmit} />
+        <Typography variant="h6" align="center" fontWeight={800} sx={{ mb: 2 }}>
+          New my projects
+        </Typography>
+
+        <NewPageClient />
         <Footer />
       </Container>
     </main>

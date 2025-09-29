@@ -1,19 +1,15 @@
 "use client";
-
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
-
-import TopBarTeacher from "@/components/TopBarTeacher";
 import ProjectThumb from "@/components/cards/ProjectThumb";
 import { PSU } from "@/theme/brand";
+import TopBarTeacher from "@/components/TopBarTeacher";
+import SearchBarRow from "@/components/teacher/SearchBarRow";
 
 type MyCard = { id: string; title: string; img?: string; tag?: string; author?: string };
-
 const MY: MyCard[] = [
   { id: "p1", title: "PHENOROBOT", img: "/mock/1.jpg", tag: "UPDATE: 2025", author: "ดร.ธีระ ภัทรพงษ์นันท์" },
   { id: "p2", title: "AR for Classroom", img: "/mock/2.jpg", tag: "UPDATE: 2024", author: "ดร.สมชาย จินทร์ทอง" },
@@ -27,16 +23,19 @@ export default function TeacherProjectList() {
     <main>
       <TopBarTeacher />
       <Container className="container" sx={{ py: 3 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-          <Typography variant="h6" fontWeight={800}>My Projects</Typography>
-          <Stack direction="row" spacing={1}>
-            <Button variant="outlined">ค้นหา</Button>
-            <Button variant="contained" href="/teacher/project/new">New Project</Button>
-          </Stack>
-        </Stack>
+        <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>
+          My Projects
+        </Typography>
+
+        {/* ปุ่ม NEW PROJECT อยู่ชิดขวาตามแบบ */}
+        <SearchBarRow
+          rightLabel="NEW PROJECT"
+          rightVariant="contained"
+          rightHref="/teacher/project/new"
+        />
 
         <Grid container spacing={2}>
-          {/* การ์ด New Project */}
+          {/* การ์ดสร้างโปรเจกต์ใหม่แบบ dashed (ซ้ายบน) */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Card
               elevation={0}
@@ -48,22 +47,19 @@ export default function TeacherProjectList() {
                 placeItems: "center",
               }}
             >
-              <CardActionArea href="/teacher/project/new" sx={{ height: "100%", width: "100%", display: "grid", placeItems: "center" }}>
+              <CardActionArea
+                href="/teacher/project/new"
+                sx={{ height: "100%", width: "100%", display: "grid", placeItems: "center" }}
+              >
                 <Typography fontWeight={800} color={PSU.subtext}>+ NEW PROJECT…</Typography>
               </CardActionArea>
             </Card>
           </Grid>
 
           {/* รายการโปรเจกต์ */}
-          {MY.map((it) => (
+          {MY.map(it => (
             <Grid key={it.id} size={{ xs: 12, sm: 6, md: 4 }}>
-              <ProjectThumb
-                href={`/teacher/project/${it.id}`}
-                image={it.img}
-                title={it.title}
-                author={it.author}
-                tag={it.tag}
-              />
+              <ProjectThumb href={`/teacher/project/${it.id}`} image={it.img} title={it.title} author={it.author} tag={it.tag} />
             </Grid>
           ))}
         </Grid>

@@ -1,101 +1,156 @@
 "use client";
 import { useState } from "react";
-import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
-import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
-import Alert from "@mui/material/Alert";
+import Paper from "@mui/material/Paper";
+import { PSU } from "@/theme/brand";
 
 export type ProjectPayload = {
   title: string;
-  type: "วิจัย" | "วิชาการ" | "นวัตกรรม" | "";
-  authors: string;
-  year: string;
-  department: string;
-  abstract: string;
+  abstract?: string;
+  authors?: string;       // ผู้เขียนหลัก
+  coauthors?: string;     // ผู้เขียนร่วม
+  year?: string;
+  department?: string;    // สถานที่จัดเก็บ
+  file?: File | null;
 };
 
 export default function ProjectForm({
-  initial, mode = "new", onSubmit
+  mode,
+  initial,
+  onSubmit,
 }: {
+  mode: "new" | "edit";
   initial?: Partial<ProjectPayload>;
-  mode?: "new" | "edit";
-  onSubmit?: (data: ProjectPayload) => void;
+  onSubmit: (data: ProjectPayload) => void;
 }) {
-  const [data, setData] = useState<ProjectPayload>({
-    title: "", type: "", authors: "", year: "", department: "", abstract: "",
-    ...initial,
+  const [form, setForm] = useState<ProjectPayload>({
+    title: initial?.title || "",
+    abstract: initial?.abstract || "",
+    authors: initial?.authors || "",
+    coauthors: initial?.coauthors || "",
+    year: initial?.year || "",
+    department: initial?.department || "",
+    file: null,
   });
-  const [error, setError] = useState<string | null>(null);
 
-  const handle = (k: keyof ProjectPayload) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setData(d => ({ ...d, [k]: e.target.value }));
+  const update = (k: keyof ProjectPayload) => (e: any) =>
+    setForm((s) => ({ ...s, [k]: e?.target?.value ?? e }));
+
+  const chooseFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] ?? null;
+    setForm((s) => ({ ...s, file: f }));
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    // validate ง่ายๆ
-    if (!data.title || !data.type || !data.year) {
-      setError("กรอก ‘ชื่อผลงาน’, ‘ประเภท’, ‘ปีที่ตีพิมพ์’ ให้ครบ");
-      return;
-    }
-    setError(null);
-    onSubmit?.(data);
+    onSubmit(form);
   };
 
   return (
-    <Paper elevation={0} sx={{ p: 2, border: "1px solid #eee", borderRadius: 2 }}>
-      <form onSubmit={submit}>
-        <Grid container spacing={2}>
-          <Grid size={{ xs:12, md:8 }}>
-            <TextField fullWidth label="ชื่อผลงาน *" value={data.title} onChange={handle("title")} />
-          </Grid>
-          <Grid size={{ xs:12, md:4 }}>
-            <TextField select fullWidth label="ประเภท *" value={data.type} onChange={handle("type")}>
-              <MenuItem value="วิจัย">วิจัย</MenuItem>
-              <MenuItem value="วิชาการ">วิชาการ</MenuItem>
-              <MenuItem value="นวัตกรรม">นวัตกรรม</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid size={{ xs:12, md:6 }}>
-            <TextField fullWidth label="ผู้จัดทำ (คั่นด้วย ,)" value={data.authors} onChange={handle("authors")} />
-          </Grid>
-          <Grid size={{ xs:12, md:3 }}>
-            <TextField fullWidth type="number" label="ปีที่ตีพิมพ์ *" value={data.year} onChange={handle("year")} />
-          </Grid>
-          <Grid size={{ xs:12, md:3 }}>
-            <TextField fullWidth label="หน่วยงาน/ภาควิชา" value={data.department} onChange={handle("department")} />
-          </Grid>
-          <Grid size={{ xs:12 }}>
-            <TextField fullWidth multiline minRows={4} label="บทคัดย่อ" value={data.abstract} onChange={handle("abstract")} />
-          </Grid>
-          <Grid size={{ xs:12 }}>
-            <Typography variant="body2" color="text.secondary">แนบไฟล์ (จำลอง – ยังไม่เชื่อมหลังบ้าน)</Typography>
-            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-              <Button variant="outlined">เลือกไฟล์</Button>
-              <Button variant="text">ล้างไฟล์</Button>
-            </Stack>
-          </Grid>
+    <Paper
+      component="form"
+      onSubmit={submit}
+      elevation={0}
+      sx={{
+        p: 3,
+        border: `1px solid ${PSU.cardBorder}`,
+        borderRadius: 2,
+        boxShadow: PSU.cardShadow,
+        maxWidth: 960,
+        mx: "auto",
+      }}
+    >
+      <Grid container spacing={2}>
+        {/* ชื่อผลงาน */}
+        <Grid size={{ xs: 12 }}>
+          <TextField
+            fullWidth
+            required
+            label="ชื่อผลงาน :"
+            value={form.title}
+            onChange={update("title")}
+          />
         </Grid>
 
-        {error ? <Alert severity="warning" sx={{ mt: 2 }}>{error}</Alert> : null}
+        {/* บทคัดย่อ */}
+        <Grid size={{ xs: 12 }}>
+          <TextField
+            fullWidth
+            multiline
+            minRows={5}
+            label="บทคัดย่อ :"
+            value={form.abstract}
+            onChange={update("abstract")}
+          />
+        </Grid>
 
-        <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-          {mode === "new" ? (
-            <>
-              <Button type="submit" variant="contained">บันทึกแบบร่าง</Button>
-              <Button variant="outlined">ส่งตรวจสอบ</Button>
-            </>
-          ) : (
-            <>
-              <Button type="submit" variant="contained">บันทึกการแก้ไข</Button>
-              <Button variant="outlined">กลับ</Button>
-            </>
-          )}
-        </Stack>
-      </form>
+        {/* แถวคู่: ผู้เขียนหลัก / ผู้เขียนร่วม */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="ชื่อผู้เขียน :"
+            value={form.authors}
+            onChange={update("authors")}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="ชื่อผู้เขียน (ร่วม) :"
+            value={form.coauthors}
+            onChange={update("coauthors")}
+          />
+        </Grid>
+
+        {/* แถวคู่: ปีที่ตีพิมพ์ / สถานที่จัดเก็บ */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="ปีที่ตีพิมพ์ :"
+            value={form.year}
+            onChange={update("year")}
+            slotProps={{ input: { inputMode: "numeric" } }}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="สถานที่จัดเก็บ :"
+            value={form.department}
+            onChange={update("department")}
+          />
+        </Grid>
+
+        {/* อัปโหลดไฟล์ */}
+        <Grid size={{ xs: 12 }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <span style={{ minWidth: 140 }}>อัปโหลดไฟล์ผลงาน :</span>
+            <Button component="label" variant="outlined" sx={{ borderRadius: 2 }}>
+              เลือกไฟล์ผลงาน
+              <input type="file" hidden onChange={chooseFile} />
+            </Button>
+            <span style={{ color: PSU.subtext }}>
+              {form.file ? form.file.name : ""}
+            </span>
+          </Stack>
+        </Grid>
+
+        {/* ปุ่มขวาล่าง */}
+        <Grid size={{ xs: 12 }}>
+          <Stack direction="row" justifyContent="end" sx={{ mt: 2 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{ bgcolor: PSU.navy, "&:hover": { bgcolor: "#23345a" }, px: 4, borderRadius: 2 }}
+            >
+              บันทึก
+            </Button>
+          </Stack>
+        </Grid>
+      </Grid>
     </Paper>
   );
 }

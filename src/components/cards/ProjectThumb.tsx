@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
 import Typography from "@mui/material/Typography";
@@ -6,34 +8,23 @@ import Chip from "@mui/material/Chip";
 import { PSU } from "@/theme/brand";
 
 export default function ProjectThumb({
-  href,
-  image,
-  title,
-  author,
-  tag, // เช่น "UPDATE: 2025"
-}: {
-  href?: string;
-  image?: string;
-  title: string;
-  author?: string;
-  tag?: string;
-}) {
+  href, image, title, author, tag
+}: { href?: string; image?: string; title: string; author?: string; tag?: string }) {
+  const [broken, setBroken] = useState(false);
+
   const Inner = (
     <Box sx={{ p: 2.2 }}>
-      {/* หัวเรื่อง */}
-      <Typography
-        variant="body2"
-        sx={{ fontWeight: 800, color: "white", letterSpacing: 0.2 }}
-      >
+      {/* หัวเรื่อง + ผู้จัดทำ */}
+      <Typography variant="body2" sx={{ fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>
         {title}
       </Typography>
-      {author ? (
+      {author && (
         <Typography variant="caption" sx={{ color: "rgba(255,255,255,.85)" }}>
           {author}
         </Typography>
-      ) : null}
+      )}
 
-      {/* รูปตัวอย่างในกรอบ */}
+      {/* กรอบรูปด้านใน */}
       <Box
         sx={{
           mt: 1.5,
@@ -46,18 +37,13 @@ export default function ProjectThumb({
           placeItems: "center",
         }}
       >
-        {/* ถ้ามีรูปให้แสดง ถ้าไม่มีก็ฟอลแบ็กเป็นพื้นไล่ระดับ */}
-        {image ? (
+        {image && !broken ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            alt={title}
+            alt=""            // ไม่ให้ alt โผล่ซ้อนเมื่อรูปแตก
             src={image}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-            }}
+            onError={() => setBroken(true)}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         ) : (
           <Box
@@ -72,19 +58,13 @@ export default function ProjectThumb({
       </Box>
 
       {/* ป้ายอัปเดตล่างซ้าย */}
-      {tag ? (
+      {tag && (
         <Chip
           label={tag}
           size="small"
-          sx={{
-            mt: 1.25,
-            bgcolor: "#E8ED9A",
-            color: "#38405A",
-            borderRadius: 1.5,
-            fontWeight: 700,
-          }}
+          sx={{ mt: 1.25, bgcolor: "#E8ED9A", color: "#38405A", borderRadius: 1.5, fontWeight: 700 }}
         />
-      ) : null}
+      )}
     </Box>
   );
 
@@ -93,10 +73,9 @@ export default function ProjectThumb({
       elevation={0}
       sx={{
         borderRadius: 2,
-        backgroundColor: "#2B3E6E", // น้ำเงิน PSU โทนการ์ด
+        backgroundColor: "#2B3E6E",
         boxShadow: PSU.cardShadow,
-        // เส้นขอบนิด ๆ ให้ดูนุ่ม
-        outline: `1px solid rgba(255,255,255,.04)`,
+        outline: "1px solid rgba(255,255,255,.04)",
       }}
     >
       {href ? <CardActionArea href={href}>{Inner}</CardActionArea> : Inner}

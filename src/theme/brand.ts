@@ -2,16 +2,17 @@
 
 /** โทนหลักของ PSU (ใช้กับ TopBarTeacher และองค์ประกอบขาว) */
 export const PSU = {
-  navy: "#1F3A8A",
-  sky: "#3B82F6",
+  navy: "#2B3E6E",       // โทนน้ำเงินของการ์ด
+  sky:  "#6AA7DB",       // ฟ้าโลโก้/เส้นเน้น
   onNavy: "#FFFFFF",
   text: "#111827",
   subtext: "#6B7280",
-  bg: "#F7F8FA",
+  bg: "#F6F7FA",
   cardBorder: "#E5E7EB",
-  cardShadow: "0 2px 10px rgba(17,24,39,.06)",
-  radius: 14
+  cardShadow: "0 6px 20px rgba(17,24,39,.08)",
+  radius: 16
 };
+
 
 
 /** สีตามบทบาท (ใช้กับ RoleTopBar / หน้า role-group เดิม) */
