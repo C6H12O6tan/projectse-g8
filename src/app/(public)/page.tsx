@@ -1,69 +1,38 @@
 "use client";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import Link from "next/link";
-import TopBar from "@/components/TopBar";
-import ExternalGrid from "@/components/ExternalGrid";
-import Footer from "@/components/Footer";
-import TextField from "@mui/material/TextField";
-import Grid from "@mui/material/Grid";
-import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
+import TopBarPublic from "@/components/TopBarPublic";
+import ProjectThumb from "@/components/cards/ProjectThumb";
+
+const ITEMS = [
+  { id: "1", title: "PhenoRobot", author: "ดร.ธีระ ภัทรพงษ์นันท์", tag: "UPDATE: 2025" },
+  { id: "2", title: "Academic Works & Achievements", author: "ดร.สมชาย อินทร์ทอง", tag: "UPDATE: 2024" },
+  { id: "3", title: "Publications and Research Contributions", author: "ดร.สุภาพร ศรีวัฒน์", tag: "UPDATE: 2025" },
+  { id: "4", title: "Innovative Research & Published Papers", author: "ดร.กิตติพล วงศ์หิรัญ", tag: "UPDATE: 2025" },
+  { id: "5", title: "Academic Projects and Journals", author: "ดร.บุศบุศ กภักดีผล", tag: "UPDATE: 2025" },
+  { id: "6", title: "Academic Research & Creative Works", author: "ดร.ปริณา ตั้งมั่น", tag: "UPDATE: 2024" },
+];
 
 export default function PublicHome() {
   return (
     <main>
-      <TopBar />
-
-      {/* HERO */}
-      <div style={{ background:'#fff', borderBottom:'1px solid #eee' }}>
-        <Container className="container" sx={{ py: 4 }}>
-          <Typography variant="h3" sx={{ mb: 1 }}>คลังผลงานวิชาการ</Typography>
-          <Typography color="text.secondary" sx={{ mb: 3 }}>
-            ค้นหา/สำรวจผลงานล่าสุดจากคณะ/สาขา ตามหมวดหมู่และปีที่ตีพิมพ์
-          </Typography>
-
-          {/* SEARCH STRIP (ตามแบบ) */}
-          <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border:'1px solid #eee' }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs:12, md:6 }}>
-                <TextField fullWidth label="คำค้น" placeholder="ชื่อผลงาน / ผู้จัดทำ / คำสำคัญ" />
-              </Grid>
-              <Grid size={{ xs:12, md:3 }}>
-                <TextField select fullWidth label="ปี">
-                  <MenuItem value="">ทั้งหมด</MenuItem>
-                  <MenuItem value="2024">2024</MenuItem>
-                  <MenuItem value="2023">2023</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid size={{ xs:12, md:3 }}>
-                <TextField select fullWidth label="ประเภท">
-                  <MenuItem value="">ทั้งหมด</MenuItem>
-                  <MenuItem value="วิจัย">วิจัย</MenuItem>
-                  <MenuItem value="วิชาการ">วิชาการ</MenuItem>
-                </TextField>
-              </Grid>
-            </Grid>
-            <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-              <Button variant="contained">ค้นหา</Button>
-              <Link href="/search"><Button>ค้นหาขั้นสูง</Button></Link>
-            </Stack>
-          </Paper>
-        </Container>
-      </div>
-
-      {/* LIST ล่าสุด */}
-      <Container className="container" sx={{ py: 4 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-          <Typography variant="h5" fontWeight={700}>ล่าสุด</Typography>
-          <Link href="/publications"><Button variant="text">ดูทั้งหมด</Button></Link>
+      <TopBarPublic />
+      <Container className="container" sx={{ py: 3 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+          <Typography variant="h6" fontWeight={800}>Projects &amp; Work</Typography>
+          <Button variant="outlined" href="/public/search">ค้นหาขั้นสูง</Button>
         </Stack>
-        <ExternalGrid />
+        <Grid container spacing={2}>
+          {ITEMS.map((it) => (
+            <Grid key={it.id} size={{ xs: 12, sm: 6, md: 4 }}>
+              <ProjectThumb href={`/publications/${it.id}`} title={it.title} author={it.author} tag={it.tag} />
+            </Grid>
+          ))}
+        </Grid>
       </Container>
-
-      <Footer />
     </main>
   );
 }

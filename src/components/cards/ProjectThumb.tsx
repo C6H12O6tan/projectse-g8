@@ -7,14 +7,26 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import { PSU } from "@/theme/brand";
 
+const DEFAULT_COVER = "/pro3.jpg";
+/** ถ้าต้องการให้ทุกใบใช้ภาพเดียวกัน ให้ true */
+const USE_GLOBAL_COVER = true;
+
 export default function ProjectThumb({
   href, image, title, author, tag
-}: { href?: string; image?: string; title: string; author?: string; tag?: string }) {
+}: {
+  href?: string;
+  image?: string;
+  title: string;
+  author?: string;
+  tag?: string;
+}) {
   const [broken, setBroken] = useState(false);
+
+  // ใช้ภาพ global ถ้าเปิด USE_GLOBAL_COVER, ถ้ารูปเสีย/ไม่มี → fallback เป็น DEFAULT_COVER
+  const cover = USE_GLOBAL_COVER ? DEFAULT_COVER : (image && !broken ? image : DEFAULT_COVER);
 
   const Inner = (
     <Box sx={{ p: 2.2 }}>
-      {/* หัวเรื่อง + ผู้จัดทำ */}
       <Typography variant="body2" sx={{ fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>
         {title}
       </Typography>
@@ -24,7 +36,6 @@ export default function ProjectThumb({
         </Typography>
       )}
 
-      {/* กรอบรูปด้านใน */}
       <Box
         sx={{
           mt: 1.5,
@@ -37,27 +48,15 @@ export default function ProjectThumb({
           placeItems: "center",
         }}
       >
-        {image && !broken ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            alt=""            // ไม่ให้ alt โผล่ซ้อนเมื่อรูปแตก
-            src={image}
-            onError={() => setBroken(true)}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-        ) : (
-          <Box
-            sx={{
-              width: "100%",
-              height: "100%",
-              background:
-                "linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.06))",
-            }}
-          />
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          alt=""
+          src={cover}
+          onError={() => setBroken(true)}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
       </Box>
 
-      {/* ป้ายอัปเดตล่างซ้าย */}
       {tag && (
         <Chip
           label={tag}
