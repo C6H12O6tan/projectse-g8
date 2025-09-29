@@ -1,21 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { supabaseFromRequest } from "@/lib/supabase/route";
 
-export async function GET(req: NextRequest) {
-  const { client } = supabaseFromRequest(req);
-  const url = new URL(req.url);
-  const q = (url.searchParams.get("q") || "").trim();
-  const field = url.searchParams.get("field") || "";
-  const type = url.searchParams.get("type") || "";
-  const year = url.searchParams.get("year") || "";
+export async function GET(req: Request) {
+  // แคสต์ชนิดเพื่อใช้ cookies ได้
+  const { client, response } = supabaseFromRequest(req as any);
+  const { data, error } = await client.from("publications").select("*").order("created_at", { ascending: false });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return response ?? NextResponse.json(data);
+}
 
-  let query = client.from("publications").select("*").eq("status", "approved");
-  if (q) query = query.ilike("title", `%${q}%`);
-  if (field) query = query.eq("field", field);
-  if (type) query = query.eq("type", type);
-  if (year) query = query.eq("year", year);
-
-  const { data, error } = await query.order("year", { ascending: false });
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json(data);
+export async function POST(req: Request) {
+  const { client, response } = supabaseFromRequest(req as any);
+  const body = await req.json();
+  const { data, error } = await client.from("publications").insert(body).select().single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return response ?? NextResponse.json(data, { status: 201 });
 }

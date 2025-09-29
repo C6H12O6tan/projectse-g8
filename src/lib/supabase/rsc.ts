@@ -1,40 +1,30 @@
 // src/lib/supabase/rsc.ts
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * ใช้ใน Server Component (RSC) เท่านั้น — อ่าน cookie ได้อย่างเดียว
- * ห้าม set cookie ใน RSC (Next จะเตือน) จึงทำ setAll เป็น no-op
+ * สร้าง Supabase client สำหรับใช้งานใน Server Component (RSC)
+ * ทำงานบน App Router เท่านั้น
  */
-export async function supabaseRSC() {
-  const client = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        // อ่านทั้งหมดจาก cookie store (ต้อง await ก่อน)
-        async getAll() {
-          const jar = await cookies();
-          const all = jar.getAll(); // -> { name: string; value: string }[]
-          // แปลงเป็นรูปแบบที่ @supabase/ssr ต้องการ
-          return all.map(
-            (c: { name: string; value: string }) => ({ name: c.name, value: c.value })
-          );
-        },
-        // ใน RSC ห้ามแก้ cookie: ทำเป็น no-op ไป
-        setAll(_cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          /* no-op: cannot set cookies in RSC */
-        },
+export async function supabaseRSC(): Promise<SupabaseClient> {
+  const store = await cookies(); // Next 15: เป็น async
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  if (!url || !anon) throw new Error("Missing Supabase env vars");
+
+  return createServerClient(url, anon, {
+    cookies: {
+      getAll() {
+        // แปลงเป็นรูปแบบ { name, value }[]
+        return store.getAll().map(({ name, value }) => ({ name, value }));
       },
-    }
-  );
-
-  return client;
-}
-
-/** helper: ดึง user ปัจจุบันจาก RSC ได้สะดวก */
-export async function currentUserRSC() {
-  const supabase = await supabaseRSC();
-  const { data } = await supabase.auth.getUser();
-  return data.user ?? null;
+      setAll(cookiesToSet) {
+        // เขียน cookie กลับเข้า response ของ App Router
+        cookiesToSet.forEach(({ name, value, options }) => {
+          store.set({ name, value, ...(options as CookieOptions | undefined) });
+        });
+      },
+    },
+  });
 }

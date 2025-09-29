@@ -1,84 +1,54 @@
+// src/app/(role)/teacher/project/new/page.tsx
 "use client";
-
 import { useState } from "react";
-import { fetchJSON } from "@/lib/http";
-import {
-  Box, Button, Paper, Stack, TextField, Typography, LinearProgress
-} from "@mui/material";
+import { createProject } from "../actions";
+import { supabaseBrowser } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-export default function NewProjectPage() {
+export default function NewProject() {
+  const [form, setForm] = useState({ title:"", type:"งานวิจัย", authors:"", year:"", abstract:"" });
+  const [file, setFile] = useState<File|null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [abstract, setAbstract] = useState("");
-  const [year, setYear] = useState<number | "">("");
-  const [uploading, setUploading] = useState(false);
-  const [thumbUrl, setThumbUrl] = useState<string | null>(null);
-  const [paperPath, setPaperPath] = useState<string | null>(null);
-
-  async function onUpload(bucket: "thumbnails" | "papers", f: File) {
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("bucket", bucket);
-      fd.append("file", f);
-      const res = await fetch("/api/teacher/uploads", {
-        method: "POST",
-        body: fd,
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "upload failed");
-      if (bucket === "thumbnails") setThumbUrl(data.publicUrl || null);
-      else setPaperPath(data.path || null);
-    } catch (e:any) {
-      alert(e.message || "อัปโหลดล้มเหลว");
-    } finally {
-      setUploading(false);
-    }
-  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const payload: any = { title, abstract, year: year ? Number(year) : null, img: thumbUrl, paper_path: paperPath };
-    const created = await fetchJSON("/api/teacher/projects", { method: "POST", json: payload });
-    router.replace("/teacher/project");
+    setLoading(true);
+    try {
+      let thumb_url: string | undefined;
+      if (file) {
+        const sb = supabaseBrowser();
+        const path = `thumb_${Date.now()}.jpg`;
+        const { error } = await sb.storage.from("thumbnails").upload(path, file, { upsert: true });
+        if (error) throw error;
+        const { data } = sb.storage.from("thumbnails").getPublicUrl(path);
+        thumb_url = data.publicUrl;
+      }
+      await createProject({ ...form, thumb_url });
+      router.replace("/teacher/project");
+    } catch (err: any) {
+      alert(err.message ?? "save failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" fontWeight={800} mb={2}>สร้างโปรเจกต์ใหม่</Typography>
-      <Paper sx={{ p: 2, maxWidth: 720 }}>
-        <form onSubmit={onSubmit}>
-          <Stack spacing={2}>
-            <TextField label="ชื่อผลงาน *" required value={title} onChange={e => setTitle(e.target.value)} />
-            <TextField label="บทคัดย่อ" multiline minRows={3} value={abstract} onChange={e => setAbstract(e.target.value)} />
-            <TextField label="ปีที่ตีพิมพ์" type="number" value={year} onChange={e => setYear(e.target.value as any)} />
-
-            <Stack direction="row" gap={2} alignItems="center">
-              <Button component="label" variant="outlined">
-                อัปโหลดรูปปก
-                <input hidden type="file" accept="image/*" onChange={e => e.target.files?.[0] && onUpload("thumbnails", e.target.files[0])}/>
-              </Button>
-              {thumbUrl ? <Typography variant="body2" color="success.main">อัปโหลดแล้ว</Typography> : null}
-            </Stack>
-
-            <Stack direction="row" gap={2} alignItems="center">
-              <Button component="label" variant="outlined">
-                อัปโหลดไฟล์งาน (PDF)
-                <input hidden type="file" accept="application/pdf" onChange={e => e.target.files?.[0] && onUpload("papers", e.target.files[0])}/>
-              </Button>
-              {paperPath ? <Typography variant="body2" color="success.main">อัปโหลดแล้ว</Typography> : null}
-            </Stack>
-
-            {uploading && <LinearProgress />}
-
-            <Stack direction="row" gap={1} justifyContent="flex-end">
-              <Button type="submit" variant="contained" disabled={uploading}>บันทึก</Button>
-            </Stack>
-          </Stack>
-        </form>
-      </Paper>
-    </Box>
+    <main className="container" style={{ padding: 24 }}>
+      <h2 style={{ fontWeight: 800 }}>New my projects</h2>
+      <form onSubmit={onSubmit} style={{ display:"grid", gap:12, maxWidth:720 }}>
+        <input placeholder="ชื่อผลงาน" value={form.title} onChange={e=>setForm(f=>({...f, title:e.target.value}))} required />
+        <textarea placeholder="บทคัดย่อ" rows={6} value={form.abstract} onChange={e=>setForm(f=>({...f, abstract:e.target.value}))} />
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          <input placeholder="ชื่อผู้เขียน" value={form.authors} onChange={e=>setForm(f=>({...f, authors:e.target.value}))} />
+          <input placeholder="ปีตีพิมพ์" value={form.year} onChange={e=>setForm(f=>({...f, year:e.target.value}))} />
+        </div>
+        <div>
+          <label>อัปโหลดรูปหน้าปก: </label>
+          <input type="file" accept="image/*" onChange={e=>setFile(e.target.files?.[0] ?? null)} />
+        </div>
+        <button disabled={loading}>{loading ? "Saving..." : "บันทึก"}</button>
+      </form>
+    </main>
   );
 }

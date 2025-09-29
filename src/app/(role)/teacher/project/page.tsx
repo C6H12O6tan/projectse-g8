@@ -1,73 +1,84 @@
-"use client";
+// src/app/(role)/teacher/project/page.tsx
+import Container from "@mui/material/Container";
+import Grid from "@mui/material/Grid";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import Image from "next/image";
+import { supabaseRSC } from "@/lib/supabase/rsc";
+import TopBarTeacher from "@/components/TopBarTeacher";
+import { PSU } from "@/theme/brand";
 
-import { useEffect, useState } from "react";
-import { fetchJSON } from "@/lib/http";
-import {
-  Box, Button, Chip, CircularProgress, Stack, Typography, Paper
-} from "@mui/material";
-import Link from "next/link";
-
-type Project = {
+type ProjectRow = {
   id: string;
   title: string;
-  abstract?: string;
-  year?: number | string;
-  created_at?: string;
+  author?: string | null;
+  thumb?: string | null;       // URL รูปปก (bucket: thumbnails)
+  update_year?: number | null; // ปี update บน ribbon
 };
 
-export default function TeacherProjectsPage() {
-  const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<Project[]>([]);
-  const [err, setErr] = useState<string | null>(null);
+export default async function TeacherProjectsPage() {
+  const sb = await supabaseRSC();
+  const { data: projects, error } = await sb
+    .from("projects")
+    .select("id,title,author,thumb,update_year")
+    .order("updated_at", { ascending: false });
 
-  async function load() {
-    try {
-      setLoading(true);
-      const data = await fetchJSON<Project[]>("/api/teacher/projects", { cache: "no-store" as any });
-      setRows(data);
-      setErr(null);
-    } catch (e: any) {
-      setErr(e.message || "Load failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function remove(id: string) {
-    if (!confirm("ลบโปรเจกต์นี้?")) return;
-    await fetchJSON(`/api/teacher/projects/${id}`, { method: "DELETE" });
-    await load();
-  }
-
-  useEffect(() => { load(); }, []);
+  // กันเคส error
+  const rows: ProjectRow[] = error ? [] : (projects as ProjectRow[]);
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5" fontWeight={800}>โปรเจกต์ของฉัน</Typography>
-        <Button component={Link} href="/teacher/project/new" variant="contained">+ สร้างโปรเจกต์</Button>
-      </Stack>
+    <main>
+      <TopBarTeacher />
+      <Container className="container" sx={{ py: 4 }}>
+        <Typography variant="h5" fontWeight={800} sx={{ mb: 2 }}>
+          My Projects
+        </Typography>
 
-      {loading ? <CircularProgress /> : err ? <Typography color="error">{err}</Typography> : (
-        <Stack spacing={1.5}>
-          {rows.map(p => (
-            <Paper key={p.id} sx={{ p: 2, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Box>
-                <Typography fontWeight={700}>{p.title}</Typography>
-                <Typography variant="body2" color="text.secondary" noWrap>{p.abstract}</Typography>
-                <Stack direction="row" gap={1} mt={0.5}>
-                  {p.year ? <Chip size="small" label={`ปี: ${p.year}`} /> : null}
-                </Stack>
-              </Box>
-              <Stack direction="row" gap={1}>
-                <Button size="small" component={Link} href={`/teacher/project/${p.id}/edit`}>แก้ไข</Button>
-                <Button size="small" color="error" onClick={() => remove(p.id)}>ลบ</Button>
-              </Stack>
-            </Paper>
+        <Grid container spacing={2}>
+          {rows.map((p) => (
+            <Grid key={p.id} size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card sx={{ bgcolor: PSU.navy, color: "#fff", borderRadius: 3, overflow: "hidden" }}>
+                <Box sx={{ position: "relative", height: 140 }}>
+                  <Image
+                    src={p.thumb || "/pro1.jpg"} // รูปปก default ที่นีมส่งมา
+                    alt={p.title}
+                    fill
+                    sizes="400px"
+                    style={{ objectFit: "cover" }}
+                  />
+                  {!!p.update_year && (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
+                        px: 1.2,
+                        py: 0.4,
+                        bgcolor: PSU.navy,
+                        borderRadius: 999,
+                        fontSize: 12,
+                        boxShadow: PSU.cardShadow,
+                      }}
+                    >
+                      UPDATE: {p.update_year}
+                    </Box>
+                  )}
+                </Box>
+                <CardContent sx={{ minHeight: 120 }}>
+                  <Typography fontWeight={800} sx={{ mb: 0.5 }}>
+                    {p.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.85 }}>
+                    {p.author || "—"}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
           ))}
-          {rows.length === 0 && <Typography color="text.secondary">ยังไม่มีโปรเจกต์</Typography>}
-        </Stack>
-      )}
-    </Box>
+        </Grid>
+      </Container>
+    </main>
   );
 }
