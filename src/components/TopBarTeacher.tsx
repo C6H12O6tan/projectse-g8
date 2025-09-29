@@ -1,3 +1,4 @@
+// src/components/TopBarTeacher.tsx
 "use client";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -13,11 +14,23 @@ import SearchIcon from "@mui/icons-material/Search";
 import { PSU } from "@/theme/brand";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
-import UserMenu from "@/components/UserMenu";   
+import { supabaseBrowser } from "@/lib/supabase/client";
+// ถ้ามี UserMenu อยู่ให้ import; ถ้าไม่มี ให้ลบบรรทัดนี้ได้
+import UserMenu from "./UserMenu";
+
+type ProfileLite = {
+  fullname?: string | null;
+  role?: "admin" | "officer" | "teacher" | string | null;
+  email?: string | null;
+};
+
+type Props = {
+  profile?: ProfileLite;
+};
 
 const ITEMS = ["HOME", "PROJECT", "STATUS", "SETTING"] as const;
 
-export default function TopBarTeacher() {
+export default function TopBarTeacher({ profile }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const base = "/teacher";
@@ -31,6 +44,14 @@ export default function TopBarTeacher() {
     return 0;
   })();
 
+  const initial = (profile?.fullname || profile?.email || "T").slice(0, 1).toUpperCase();
+
+  async function handleLogout() {
+    const sb = supabaseBrowser();
+    await sb.auth.signOut();
+    router.replace("/login");
+  }
+
   return (
     <AppBar
       position="sticky"
@@ -41,15 +62,7 @@ export default function TopBarTeacher() {
         <Toolbar disableGutters sx={{ gap: 20 / 8, minHeight: 72 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 10 / 8, mr: 2 }}>
             <Box sx={{ position: "relative", width: 140, height: 40 }}>
-              {/* แก้พาธโลโก้ให้ถูกต้องตามไฟล์ใน public/ */}
-              <Image
-                src="/psubrand.png"
-                alt="PSU"
-                fill
-                sizes="140px"
-                style={{ objectFit: "contain" }}
-                priority
-              />
+              <Image src="/psubrand.png" alt="PSU" fill sizes="140px" style={{ objectFit: "contain" }} priority />
             </Box>
             <Typography sx={{ fontWeight: 700 }}>ระบบบริหารจัดการผลงานตีพิมพ์</Typography>
           </Box>
@@ -58,22 +71,9 @@ export default function TopBarTeacher() {
             value={value}
             onChange={(_, i) => router.push(i === 0 ? base : `${base}/${ITEMS[i].toLowerCase()}`)}
             textColor="inherit"
-            slotProps={{
-              indicator: {
-                sx: {
-                  backgroundColor: PSU.sky,
-                  height: 3,
-                  borderRadius: 1.5,
-                },
-              },
-            }}
+            slotProps={{ indicator: { style: { background: PSU.sky, height: 3, borderRadius: 6 } } }}
             sx={{
-              "& .MuiTab-root": {
-                textTransform: "uppercase",
-                fontWeight: 800,
-                minHeight: 44,
-                color: PSU.text,
-              },
+              "& .MuiTab-root": { textTransform: "uppercase", fontWeight: 800, minHeight: 44, color: PSU.text },
               "& .MuiTab-root.Mui-selected": { color: PSU.navy },
             }}
           >
@@ -85,7 +85,30 @@ export default function TopBarTeacher() {
 
           <Box sx={{ flex: 1 }} />
 
-          <UserMenu initial="T" toProfile="/teacher/setting" />
+          <TextField
+            size="small"
+            placeholder="ค้นหา…"
+            sx={{ mr: 1, "& .MuiOutlinedInput-root": { borderRadius: 999, height: 38 } }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+          <Button variant="outlined" sx={{ borderRadius: 999, height: 38, borderColor: PSU.cardBorder }}>
+            ADVANCE
+          </Button>
+
+          {/* ถ้ามี UserMenu: ใช้ prop ตาม type ของมันเท่านั้น */}
+          {typeof UserMenu === "function" ? (
+            <UserMenu initial={initial} onLogout={handleLogout} toProfile="/teacher/setting" />
+          ) : (
+            <Avatar sx={{ ml: 2, width: 36, height: 36, bgcolor: PSU.navy }}>{initial}</Avatar>
+          )}
         </Toolbar>
       </div>
     </AppBar>

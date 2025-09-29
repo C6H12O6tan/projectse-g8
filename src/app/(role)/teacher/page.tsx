@@ -5,6 +5,7 @@ import Grid from "@mui/material/Grid";
 import TopBarTeacher from "@/components/TopBarTeacher";
 import ProjectThumb from "@/components/cards/ProjectThumb";
 import SearchBarRow from "@/components/teacher/SearchBarRow";
+import { requireRole } from "@/lib/auth/require";
 
 const ITEMS = [
   { id:"1",  title:"PHENOROBOT", author:"ดร.ธีระ ภัทรพงษ์นันท์", img:"/mock/1.jpg", tag:"UPDATE: 2025" },
@@ -15,7 +16,8 @@ const ITEMS = [
   { id:"6",  title:"ACADEMIC RESEARCH & CLINICAL WORK", author:"ดร.ปริณา ตั้งมั่น", img:"/mock/6.jpg", tag:"UPDATE: 2024" },
 ];
 
-export default function TeacherHome() {
+export default async function TeacherHome() {
+  await requireRole("teacher"); 
   return (
     <main>
       <TopBarTeacher />

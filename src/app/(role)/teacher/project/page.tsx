@@ -1,65 +1,80 @@
-"use client";
+// src/app/(role)/teacher/project/page.tsx
 import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
-import CardActionArea from "@mui/material/CardActionArea";
-import ProjectThumb from "@/components/cards/ProjectThumb";
-import { PSU } from "@/theme/brand";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import Image from "next/image";
+import { supabaseRSC } from "@/lib/supabase/rsc";
 import TopBarTeacher from "@/components/TopBarTeacher";
-import SearchBarRow from "@/components/teacher/SearchBarRow";
+import { PSU } from "@/theme/brand";
 
-type MyCard = { id: string; title: string; img?: string; tag?: string; author?: string };
-const MY: MyCard[] = [
-  { id: "p1", title: "PHENOROBOT", img: "/mock/1.jpg", tag: "UPDATE: 2025", author: "ดร.ธีระ ภัทรพงษ์นันท์" },
-  { id: "p2", title: "AR for Classroom", img: "/mock/2.jpg", tag: "UPDATE: 2024", author: "ดร.สมชาย จินทร์ทอง" },
-  { id: "p3", title: "Learning Analytics", img: "/mock/3.jpg", tag: "UPDATE: 2023", author: "ดร.ปริณา ตั้งมั่น" },
-  { id: "p4", title: "Digital Learning in HE", img: "/mock/4.jpg", tag: "UPDATE: 2025", author: "ดร.บุศบุศ กภักดีผล" },
-  { id: "p5", title: "Academic Research", img: "/mock/5.jpg", tag: "UPDATE: 2024", author: "ดร.กิตติพล วงศ์หิรัญ" },
-];
+type ProjectRow = {
+  id: string;
+  title: string;
+  author?: string | null;
+  thumb?: string | null;       // URL รูปปก (bucket: thumbnails)
+  update_year?: number | null; // ปี update บน ribbon
+};
 
-export default function TeacherProjectList() {
+export default async function TeacherProjectsPage() {
+  const sb = await supabaseRSC();
+  const { data: projects, error } = await sb
+    .from("projects")
+    .select("id,title,author,thumb,update_year")
+    .order("updated_at", { ascending: false });
+
+  // กันเคส error
+  const rows: ProjectRow[] = error ? [] : (projects as ProjectRow[]);
+
   return (
     <main>
       <TopBarTeacher />
-      <Container className="container" sx={{ py: 3 }}>
-        <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>
+      <Container className="container" sx={{ py: 4 }}>
+        <Typography variant="h5" fontWeight={800} sx={{ mb: 2 }}>
           My Projects
         </Typography>
 
-        {/* ปุ่ม NEW PROJECT อยู่ชิดขวาตามแบบ */}
-        <SearchBarRow
-          rightLabel="NEW PROJECT"
-          rightVariant="contained"
-          rightHref="/teacher/project/new"
-        />
-
         <Grid container spacing={2}>
-          {/* การ์ดสร้างโปรเจกต์ใหม่แบบ dashed (ซ้ายบน) */}
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <Card
-              elevation={0}
-              sx={{
-                borderRadius: 2,
-                border: `2px dashed ${PSU.cardBorder}`,
-                height: 212,
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <CardActionArea
-                href="/teacher/project/new"
-                sx={{ height: "100%", width: "100%", display: "grid", placeItems: "center" }}
-              >
-                <Typography fontWeight={800} color={PSU.subtext}>+ NEW PROJECT…</Typography>
-              </CardActionArea>
-            </Card>
-          </Grid>
-
-          {/* รายการโปรเจกต์ */}
-          {MY.map(it => (
-            <Grid key={it.id} size={{ xs: 12, sm: 6, md: 4 }}>
-              <ProjectThumb href={`/teacher/project/${it.id}`} image={it.img} title={it.title} author={it.author} tag={it.tag} />
+          {rows.map((p) => (
+            <Grid key={p.id} size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card sx={{ bgcolor: PSU.navy, color: "#fff", borderRadius: 3, overflow: "hidden" }}>
+                <Box sx={{ position: "relative", height: 140 }}>
+                  <Image
+                    src={p.thumb || "/pro1.jpg"} // รูปปก default ที่นีมส่งมา
+                    alt={p.title}
+                    fill
+                    sizes="400px"
+                    style={{ objectFit: "cover" }}
+                  />
+                  {!!p.update_year && (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
+                        px: 1.2,
+                        py: 0.4,
+                        bgcolor: PSU.navy,
+                        borderRadius: 999,
+                        fontSize: 12,
+                        boxShadow: PSU.cardShadow,
+                      }}
+                    >
+                      UPDATE: {p.update_year}
+                    </Box>
+                  )}
+                </Box>
+                <CardContent sx={{ minHeight: 120 }}>
+                  <Typography fontWeight={800} sx={{ mb: 0.5 }}>
+                    {p.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.85 }}>
+                    {p.author || "—"}
+                  </Typography>
+                </CardContent>
+              </Card>
             </Grid>
           ))}
         </Grid>

@@ -3,178 +3,182 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import InputAdornment from "@mui/material/InputAdornment";
 import PersonIcon from "@mui/icons-material/Person";
 import LockIcon from "@mui/icons-material/Lock";
-import Link from "@mui/material/Link";
 import { PSU } from "@/theme/brand";
+import { supabaseBrowser } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const sb = supabaseBrowser();
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 350));
-    const u = username.trim().toLowerCase();
-    if (u.startsWith("admin")) router.replace("/admin");
-    else if (u.startsWith("officer")) router.replace("/officer");
-    else router.replace("/teacher");
-    setSubmitting(false);
+    setLoading(true);
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({
+        email: username.trim(),
+        password,
+      });
+      if (error) throw error;
+
+      // อ่าน role จาก profiles
+      const { data: profile, error: pErr } = await sb
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+      if (pErr) throw pErr;
+
+      const role = (profile?.role ?? "teacher").toLowerCase();
+      if (role === "admin") router.replace("/admin");
+      else if (role === "officer") router.replace("/officer");
+      else router.replace("/teacher");
+    } catch (err: any) {
+      alert(err.message ?? "Login failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <main>
-      {/* แบนเนอร์ใหญ่ด้านบน (รูปแฟ้ม) */}
-      <Box
-        sx={{
-          height: { xs: 180, sm: 220, md: 260 },
-          backgroundImage: "url('/logo-login.png')", // ใส่รูปแฟ้มที่ public/logo-login.png
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          backgroundSize: "contain",
-        }}
-      />
-
-      {/* แผงสีกรมท่าเต็มความกว้าง + ฟอร์มตรงกลาง */}
-      <Box sx={{ bgcolor: PSU.navy, color: "#fff", py: { xs: 6, md: 8 } }}>
-        <Container className="container">
-          <Typography
-            align="center"
-            sx={{ fontWeight: 800, fontSize: { xs: 26, md: 36 }, mb: 4 }}
-          >
-            ระบบบริหารจัดการผลงานตีพิมพ์
-          </Typography>
-
-          <Box
-            component="form"
-            onSubmit={onSubmit}
-            sx={{ mx: "auto", maxWidth: 600 }}
-          >
-            <Stack spacing={2.5}>
-              {/* USERNAME */}
-              <TextField
-                fullWidth
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                label="USERNAME"
-                size="medium"
-                variant="outlined"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <PersonIcon sx={{ color: "#fff" }} fontSize="small" />
-                      </InputAdornment>
-                    ),
-                    sx: {
-                      height: 56,
-                      color: "#fff",
-                      bgcolor: "transparent",
-                      borderRadius: 1.5,
-                    },
-                  },
-                }}
-                sx={{
-                  "& .MuiInputLabel-root": { color: "#fff", opacity: 0.9 },
-                  "& .MuiOutlinedInput-notchedOutline": { borderColor: "#fff" },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#ffffffcc",
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#ffffff",
-                    borderWidth: "2px",
-                  },
-                }}
-                required
-              />
-
-              {/* PASSWORD */}
-              <TextField
-                fullWidth
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                label="PASSWORD"
-                type="password"
-                size="medium"
-                variant="outlined"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockIcon sx={{ color: "#fff" }} fontSize="small" />
-                      </InputAdornment>
-                    ),
-                    sx: {
-                      height: 56,
-                      color: "#fff",
-                      bgcolor: "transparent",
-                      borderRadius: 1.5,
-                    },
-                  },
-                }}
-                sx={{
-                  "& .MuiInputLabel-root": { color: "#fff", opacity: 0.9 },
-                  "& .MuiOutlinedInput-notchedOutline": { borderColor: "#fff" },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#ffffffcc",
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#ffffff",
-                    borderWidth: "2px",
-                  },
-                }}
-                required
-              />
-
-              {/* ปุ่ม LOGIN สีขาว ตัวอักษรกรมท่า */}
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={submitting}
-                sx={{
-                  height: 52,
-                  fontWeight: 800,
-                  borderRadius: 1.5,
-                  bgcolor: "#fff",
-                  color: PSU.navy,
-                  boxShadow: "0 3px 0 rgba(0,0,0,.15)",
-                  "&:hover": { bgcolor: "#F2F4F7" },
-                }}
-                fullWidth
-              >
-                {submitting ? "กำลังเข้าสู่ระบบ..." : "LOGIN"}
-              </Button>
-
-              <Typography align="center">
-                <Link
-                  href="#"
-                  underline="hover"
-                  sx={{ color: "#CFE0F6", fontWeight: 600 }}
-                >
-                  Forgot password?
-                </Link>
-              </Typography>
-            </Stack>
-          </Box>
-        </Container>
+      {/* แบนเนอร์ตามแบบ */}
+      <Box sx={{ py: { xs: 3, md: 6 }, display: "grid", placeItems: "center" }}>
+        <Box sx={{ position: "relative", width: { xs: 680, md: 820 }, height: { xs: 200, md: 240 }, maxWidth: "90vw" }}>
+          <Image
+            src={"/logo-login.png"}
+            alt="PSU Folder"
+            fill
+            sizes="820px"
+            style={{ objectFit: "contain" }}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/psubrand.png"; }}
+            priority
+          />
+        </Box>
       </Box>
 
-      {/* ลิขสิทธิ์ด้านล่าง */}
-      <Container className="container">
-        <Typography
-          variant="caption"
-          sx={{ display: "block", textAlign: "center", my: 3, color: PSU.subtext }}
+      <Container className="container" sx={{ pb: 6 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            mx: "auto",
+            maxWidth: 600,
+            borderRadius: 3,
+            overflow: "hidden",
+            boxShadow: PSU.cardShadow,
+            border: `1px solid ${PSU.cardBorder}`,
+            bgcolor: PSU.navy,
+          }}
         >
+          <Box sx={{ px: { xs: 4, md: 5 }, py: { xs: 3.5, md: 4 } }}>
+            <Typography variant="h6" align="center" sx={{ color: "#fff", fontWeight: 800, mb: 2.5 }}>
+              ลงชื่อเข้าใช้
+            </Typography>
+
+            <form onSubmit={onSubmit}>
+              <Stack spacing={2}>
+                <TextField
+                  label="Username *"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  fullWidth
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <PersonIcon fontSize="small" />
+                        </InputAdornment>
+                      ),
+                      sx: {
+                        height: 48,
+                        borderRadius: 2,
+                        bgcolor: "rgba(255,255,255,0.10)",
+                        color: "#fff",
+                      },
+                    },
+                  }}
+                  sx={{
+                    "& .MuiInputLabel-root": { color: "rgba(255,255,255,.85)" },
+                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,.25)" },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,.4)" },
+                  }}
+                />
+
+                <TextField
+                  label="Password *"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  fullWidth
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LockIcon fontSize="small" />
+                        </InputAdornment>
+                      ),
+                      sx: {
+                        height: 48,
+                        borderRadius: 2,
+                        bgcolor: "rgba(255,255,255,0.10)",
+                        color: "#fff",
+                      },
+                    },
+                  }}
+                  sx={{
+                    "& .MuiInputLabel-root": { color: "rgba(255,255,255,.85)" },
+                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,.25)" },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,.4)" },
+                  }}
+                />
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  disabled={loading}
+                  sx={{
+                    mt: 0.5,
+                    height: 44,
+                    fontWeight: 800,
+                    borderRadius: 2,
+                    bgcolor: PSU.sky,
+                    color: PSU.navy,
+                    "&:hover": { bgcolor: "#78B7E5" },
+                  }}
+                >
+                  {loading ? "กำลังเข้าสู่ระบบ..." : "LOGIN"}
+                </Button>
+
+                <Box sx={{ textAlign: "center", mt: 0.5 }}>
+                  <Link href="#" underline="hover" sx={{ color: "#A9CDEF", fontWeight: 600 }}>
+                    Forgot password?
+                  </Link>
+                </Box>
+              </Stack>
+            </form>
+          </Box>
+        </Paper>
+
+        <Typography variant="caption" sx={{ display: "block", textAlign: "center", mt: 3, color: PSU.subtext }}>
           © 2025 SE G8
         </Typography>
       </Container>
