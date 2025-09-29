@@ -27,7 +27,6 @@ export default function TeacherSetting() {
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="ตำแหน่งงาน" defaultValue="Teacher" /></Grid>
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="Email" /></Grid>
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="สาขาวิชา/สังกัด" /></Grid>
-                <Grid size={{ xs:12 }}><TextField fullWidth label="ที่อยู่" defaultValue="ABC, adc-1250, Dhaka, Bangladesh" /></Grid>
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="เพศ" defaultValue="Female" /></Grid>
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="วันเกิด" defaultValue="12-05-1912" /></Grid>
                 <Grid size={{ xs:12 }}>

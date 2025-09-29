@@ -1,6 +1,5 @@
 "use client";
 
-import TopBarAdmin from "@/components/TopBarAdmin";
 import {
   Avatar, Box, Button, Container, Divider, Grid, IconButton, MenuItem,
   Paper, TextField, Typography
@@ -15,7 +14,6 @@ const GENDERS = ["Female", "Male", "Other"];
 export default function AdminUserEditPage() {
   return (
     <>
-      <TopBarAdmin />
       <main>
         <Container className="container" sx={{ py: 4 }}>
           <Paper
@@ -90,9 +88,7 @@ export default function AdminUserEditPage() {
                         ))}
                       </TextField>
                     </Grid>
-                    <Grid size= {{xs: 12, md: 6}}>
-                      <TextField fullWidth label="ที่อยู่" placeholder="ABC, adc- 1250, Dhaka, Bangladesh" />
-                    </Grid>
+                   
                   </Grid>
 
                   <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>

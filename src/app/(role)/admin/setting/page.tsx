@@ -6,13 +6,11 @@ import Paper from "@mui/material/Paper";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import TopBarAdmin from "@/components/TopBarAdmin";
 import { PSU } from "@/theme/brand";
 
 export default function AdminSetting() {
   return (
     <main>
-      <TopBarAdmin />
       <Container className="container" sx={{ py: 3 }}>
         <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>ข้อมูลส่วนบุคคล</Typography>
         <Paper elevation={0} sx={{ p: 2, border:`1px solid ${PSU.cardBorder}`, borderRadius: 2, boxShadow: PSU.cardShadow }}>
@@ -27,7 +25,6 @@ export default function AdminSetting() {
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="ตำแหน่งงาน" defaultValue="Admin" /></Grid>
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="Email" /></Grid>
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="สาขาวิชา/สังกัด" /></Grid>
-                <Grid size={{ xs:12 }}><TextField fullWidth label="ที่อยู่" defaultValue="ABC, adc-1250, Dhaka, Bangladesh" /></Grid>
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="เพศ" defaultValue="Female" /></Grid>
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="วันเกิด" defaultValue="12-05-1912" /></Grid>
                 <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="เบอร์โทร" defaultValue="+880 12345-6789" /></Grid>

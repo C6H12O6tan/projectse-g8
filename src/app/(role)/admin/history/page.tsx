@@ -54,7 +54,6 @@ export default function AdminHistoryPage() {
 
   return (
     <main>
-      <TopBarAdmin />
       
       <Container className="container" sx={{ py: 4 }}>
         {/* หัวข้อ + กล่องค้นหา (ชิดขวา) */}

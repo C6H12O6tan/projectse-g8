@@ -11,7 +11,6 @@ import Stack from "@mui/material/Stack";
 import InputAdornment from "@mui/material/InputAdornment";
 import SearchIcon from "@mui/icons-material/Search";
 import Chip from "@mui/material/Chip";
-import TopBarAdmin from "@/components/TopBarAdmin";
 import { PSU } from "@/theme/brand";
 
 type Item = { id:string; title:string; author:string; dept:string; type:string; year:number; };
@@ -40,7 +39,6 @@ export default function AdminSearch() {
 
   return (
     <main>
-      <TopBarAdmin />
       <Container className="container" sx={{ py: 3 }}>
         <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>สืบค้นผลงานตีพิมพ์</Typography>
 

@@ -2,7 +2,6 @@
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
-import TopBarAdmin from "@/components/TopBarAdmin";
 import ProjectThumb from "@/components/cards/ProjectThumb";
 import SearchBarRow from "@/components/teacher/SearchBarRow";
 
@@ -18,7 +17,6 @@ const ITEMS = [
 export default function AdminHome() {
   return (
     <main>
-      <TopBarAdmin />
       <Container className="container" sx={{ py: 3 }}>
         <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>Projects &amp; Work</Typography>
         <SearchBarRow rightLabel="ค้นหาขั้นสูง" rightVariant="outlined" rightHref="/admin/search" />

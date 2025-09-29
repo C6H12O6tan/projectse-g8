@@ -1,28 +1,20 @@
 // src/app/(role)/teacher/layout.tsx
-import { supabaseRSC } from "@/lib/supabase/rsc";
-import TopBarTeacher from "@/components/TopBarTeacher";
+import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
+import { supabaseRSCClient } from "@/lib/supabase/app-rsc";
 
-export default async function TeacherLayout({ children }: { children: React.ReactNode }) {
-  const sb = await supabaseRSC();
-  const { data: { user } } = await sb.auth.getUser();
+export default async function TeacherLayout({ children }: { children: ReactNode }) {
+  const supabase = await supabaseRSCClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  let profile:
-    | { fullname?: string | null; role?: string | null; email?: string | null }
-    | undefined;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role,fullname,email")
+    .eq("id", user.id)
+    .single();
 
-  if (user) {
-    const { data } = await sb
-      .from("profiles")
-      .select("fullname, role, email")
-      .eq("id", user.id)
-      .single();
-    profile = data ?? undefined;
-  }
+  if (profile?.role !== "teacher") redirect("/");
 
-  return (
-    <>
-      <TopBarTeacher profile={profile} />
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }
