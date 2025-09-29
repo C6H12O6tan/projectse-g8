@@ -11,19 +11,18 @@ export function supabaseFromRequest(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        /** ✅ อ่านทั้งหมดจาก req */
+        // อ่าน cookies ทั้งหมดจาก req
         getAll() {
-          // NextRequest.cookies.getAll(): { name, value }[]
           return req.cookies.getAll();
         },
-        /** ✅ เขียนทั้งหมดลง res */
+        // เขียน cookies ทั้งหมดลง res
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               res.cookies.set({ name, value, ...(options as CookieOptions | undefined) });
             });
           } catch {
-            // no-op
+            /* no-op */
           }
         },
       },
