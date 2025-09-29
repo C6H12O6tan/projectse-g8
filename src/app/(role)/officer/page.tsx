@@ -1,44 +1,34 @@
 "use client";
 import Container from "@mui/material/Container";
-import TopBar from "@/components/TopBar";
-import Footer from "@/components/Footer";
-import RoleHeader from "@/components/RoleHeader";
-import RoleStatRow from "@/components/RoleStatRow";
-import RoleQuickActions from "@/components/RoleQuickActions";
-import RoleTaskTable from "@/components/RoleTaskTable";
-import RoleTabs from "@/components/RoleTabs";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import TopBarOfficer from "@/components/TopBarOfficer";
+import ProjectThumb from "@/components/cards/ProjectThumb";
+import SearchBarRow from "@/components/teacher/SearchBarRow"; // ใช้ตัวเดิม
+
+const ITEMS = [
+  { id:"1",  title:"PhenoRobot", author:"ดร.ธีระ ภัทรพงษ์นันท์", img:"/mock/1.jpg", tag:"UPDATE: 2025" },
+  { id:"2",  title:"Academic Works & Achievements", author:"ดร.สมชาย อินทร์ทอง", img:"/mock/2.jpg", tag:"UPDATE: 2024" },
+  { id:"3",  title:"Publications and Research Contributions", author:"ดร.สุภาพร ศรีวัฒน์", img:"/mock/3.jpg", tag:"UPDATE: 2025" },
+  { id:"4",  title:"Innovative Research & Published Papers", author:"ดร.กิตติพล วงศ์หิรัญ", img:"/mock/4.jpg", tag:"UPDATE: 2025" },
+  { id:"5",  title:"Academic Projects and Journals", author:"ดร.บุศบุศ กภักดีผล", img:"/mock/5.jpg", tag:"UPDATE: 2025" },
+  { id:"6",  title:"Academic Research & Clinical Works", author:"ดร.ปริณา ตั้งมั่น", img:"/mock/6.jpg", tag:"UPDATE: 2024" },
+];
 
 export default function OfficerHome() {
-  const stats = [
-    { label: "ผลงานของฉัน", value: 42 },
-    { label: "รอตรวจสอบ", value: 7 },
-    { label: "ต้องแก้ไข", value: 3 },
-    { label: "อนุมัติแล้ว", value: 32 },
-  ];
-  const actions = [
-    { title: "เพิ่มผลงานใหม่", desc: "กรอกแบบฟอร์ม/อัปโหลดไฟล์",
-      primary: { label: "เริ่มต้น", href: "/officer/project/new" },
-      secondary: { label: "คู่มือการกรอก", href: "/publications" } },
-    { title: "ติดตามสถานะ", desc: "ดูรายการงานที่รอ/ต้องแก้ไข",
-      primary: { label: "ดูรายการ", href: "/officer/project" },
-      secondary: { label: "รายงานสรุป", href: "/search" } },
-  ];
-  const rows = [
-    { id: "1", title: "Smart Campus IoT", owner: "ฉัน", status: "รอตรวจ", updated: "วันนี้" },
-    { id: "2", title: "Green Computing", owner: "ฉัน", status: "ต้องแก้ไข", updated: "เมื่อวาน" },
-    { id: "3", title: "AR for Classroom", owner: "ฉัน", status: "อนุมัติแล้ว", updated: "3 วันที่แล้ว" },
-  ];
-
   return (
     <main>
-      <TopBar />
-      <Container className="container" sx={{ py: 4 }}>
-        <RoleTabs base="/officer" tabs={["Home","project","personnel","setting"]} />
-        <RoleHeader title="แดชบอร์ดเจ้าหน้าที่" subtitle="สรุปงานของฉัน และเมนูทำงานประจำวัน" />
-        <RoleStatRow items={stats} />
-        <RoleQuickActions actions={actions} />
-        <RoleTaskTable rows={rows} title="งานล่าสุดของฉัน" />
-        <Footer />
+      <TopBarOfficer />
+      <Container className="container" sx={{ py: 3 }}>
+        <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>Projects &amp; Work</Typography>
+        <SearchBarRow rightLabel="ค้นหาขั้นสูง" rightVariant="outlined" rightHref="/officer/search" />
+        <Grid container spacing={2}>
+          {ITEMS.map(it => (
+            <Grid key={it.id} size={{ xs:12, sm:6, md:4 }}>
+              <ProjectThumb href="/officer/project" image={it.img} title={it.title} author={it.author} tag={it.tag} />
+            </Grid>
+          ))}
+        </Grid>
       </Container>
     </main>
   );

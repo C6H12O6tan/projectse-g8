@@ -1,28 +1,43 @@
+"use client";
 import Container from "@mui/material/Container";
-import TopBar from "@/components/TopBar";
-import Footer from "@/components/Footer";
-import RoleHeader from "@/components/RoleHeader";
-import RoleTabs from "@/components/RoleTabs";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
+import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import TopBarOfficer from "@/components/TopBarOfficer";
+import { PSU } from "@/theme/brand";
 
 export default function OfficerSetting() {
   return (
     <main>
-      <TopBar />
-      <Container className="container" sx={{ py: 4 }}>
-        <RoleTabs base="/officer" tabs={["Home","project","personnel","setting"]} />
-        <RoleHeader title="ตั้งค่า" subtitle="ค่าบัญชี/การแจ้งเตือน (จำลอง)" />
-        <Paper elevation={0} sx={{ p: 2, border: "1px solid #eee", borderRadius: 2 }}>
-          <Stack spacing={2}>
-            <TextField label="ภาษา/รูปแบบวันที่" />
-            <TextField label="อีเมลแจ้งเตือน" />
-            <Button variant="contained">บันทึก</Button>
-          </Stack>
+      <TopBarOfficer />
+      <Container className="container" sx={{ py: 3 }}>
+        <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>ข้อมูลส่วนบุคคล</Typography>
+        <Paper elevation={0} sx={{ p: 2, border:`1px solid ${PSU.cardBorder}`, borderRadius: 2, boxShadow: PSU.cardShadow }}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs:12, md:3 }} sx={{ display:"grid", placeItems:"center" }}>
+              <Avatar sx={{ width: 120, height: 120 }}>O</Avatar>
+              <Button variant="outlined" sx={{ mt: 1 }}>Change Profile</Button>
+            </Grid>
+            <Grid size={{ xs:12, md:9 }}>
+              <Grid container spacing={2}>
+                <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="ชื่อ-นามสกุล" /></Grid>
+                <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="ตำแหน่งงาน" defaultValue="Officer" /></Grid>
+                <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="Email" /></Grid>
+                <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="สาขาวิชา/สังกัด" /></Grid>
+                <Grid size={{ xs:12 }}><TextField fullWidth label="ที่อยู่" defaultValue="ABC, adc-1250, Dhaka, Bangladesh" /></Grid>
+                <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="เพศ" defaultValue="Female" /></Grid>
+                <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="วันเกิด" defaultValue="12-05-1912" /></Grid>
+                <Grid size={{ xs:12, md:6 }}><TextField fullWidth label="เบอร์โทร" defaultValue="+880 12345-6789" /></Grid>
+                <Grid size={{ xs:12 }}>
+                  <Button variant="contained">Update</Button>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
         </Paper>
-        <Footer />
       </Container>
     </main>
   );

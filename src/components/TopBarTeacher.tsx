@@ -13,6 +13,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { PSU } from "@/theme/brand";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import UserMenu from "@/components/UserMenu";   
 
 const ITEMS = ["HOME", "PROJECT", "STATUS", "SETTING"] as const;
 
@@ -84,7 +85,7 @@ export default function TopBarTeacher() {
 
           <Box sx={{ flex: 1 }} />
 
-          <Avatar sx={{ ml: 2, width: 36, height: 36, bgcolor: PSU.navy }}>T</Avatar>
+          <UserMenu initial="T" toProfile="/teacher/setting" />
         </Toolbar>
       </div>
     </AppBar>
