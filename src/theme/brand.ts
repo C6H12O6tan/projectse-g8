@@ -7,7 +7,7 @@ export const PSU = {
   onNavy: "#FFFFFF",
   text: "#111827",
   subtext: "#6B7280",
-  bg: "#F6F7FA",
+  bg: "#FFFFFF",
   cardBorder: "#E5E7EB",
   cardShadow: "0 6px 20px rgba(17,24,39,.08)",
   radius: 16
