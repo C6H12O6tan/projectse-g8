@@ -1,199 +1,235 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import TopBarAdmin from "@/components/TopBarAdmin";
-import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import SearchIcon from "@mui/icons-material/Search";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import { PSU } from "@/theme/brand";
+import { useEffect, useMemo, useState } from 'react';
+import { useRole } from '@/lib/useRole';
+import {
+  Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
+  DialogContentText, DialogTitle, IconButton, Snackbar, Table, TableBody,
+  TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography, Paper
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import SearchIcon from '@mui/icons-material/Search';
 
-// ข้อมูลตัวอย่าง (จะต่อ Supabase ทีหลัง)
-type Row = {
-  uid: string;
-  name: string;
-  address: string;
-  scno: string;
-  amount: string | number;
+type AuditLog = {
+  id: string;
+  action?: string | null;
+  table_name?: string | null;
+  record_id?: string | null;
+  actor_id?: string | null;
+  meta?: any;
+  created_at?: string | null;
 };
 
-const SAMPLE: Row[] = [
-  { uid: "112", name: "Mithilesh Kumar Singh", address: "Kritipur, Kathmandu", scno: "12358G", amount: "-" },
-  { uid: "113", name: "Suron Maharjan", address: "Natole, Lalitpur", scno: "86523B", amount: 113 },
-  { uid: "114", name: "Sandesh Bajracharya", address: "BhinchhebahaI, Lalitpur", scno: "78365D", amount: 114 },
-  { uid: "116", name: "Subin Sedhai", address: "Baneshwor, Kathmandu", scno: "86326F", amount: 116 },
-  { uid: "117", name: "Wonjala Joshi", address: "Bhaisepati, Lalitpur", scno: "45987ZB", amount: 117 },
-];
-
 export default function AdminHistoryPage() {
-  const [q, setQ] = useState("");
+  // ✅ ใช้ hook กลาง ตรวจสิทธิ์พร้อมแนบโทเคนตอนเรียก API role
+  const { data: roleData, loading: loadingRole } = useRole();
+  const role = roleData?.role ?? null;
 
-  const rows = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return SAMPLE;
-    return SAMPLE.filter(
-      (r) =>
-        r.name.toLowerCase().includes(s) ||
-        r.address.toLowerCase().includes(s) ||
-        r.uid.toLowerCase().includes(s)
+  // data
+  const [items, setItems] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  // ui
+  const [q, setQ] = useState('');
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [snack, setSnack] = useState<string | null>(null);
+
+  // โหลดข้อมูล (แนบ Bearer ถ้ามี)
+  const load = async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      let headers: Record<string, string> = {};
+      try {
+        const { supabaseBrowser } = await import('@/lib/supabaseBrowser');
+        const sb = supabaseBrowser();
+        const { data: s } = await sb.auth.getSession();
+        const token = s?.session?.access_token;
+        if (token) headers.Authorization = `Bearer ${token}`;
+      } catch { /* no-op */ }
+
+      const r = await fetch('/api/admin/history', { cache: 'no-store', headers });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j?.error || `HTTP ${r.status}`);
+      }
+      const j = await r.json();
+      setItems(j.items || []);
+    } catch (e: any) {
+      setErr(e.message || 'Load error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (role === 'admin') load();
+  }, [role]);
+
+  const filtered = useMemo(() => {
+    if (!q.trim()) return items;
+    const s = q.toLowerCase();
+    return items.filter(it =>
+      (it.id || '').toLowerCase().includes(s) ||
+      (it.table_name || '').toLowerCase().includes(s) ||
+      (it.action || '').toLowerCase().includes(s) ||
+      (it.record_id || '').toLowerCase().includes(s) ||
+      (it.actor_id || '').toLowerCase().includes(s) ||
+      JSON.stringify(it.meta || {}).toLowerCase().includes(s)
     );
-  }, [q]);
+  }, [items, q]);
+
+  const onDelete = async (id: string) => {
+    try {
+      let headers: Record<string, string> = {};
+      try {
+        const { supabaseBrowser } = await import('@/lib/supabaseBrowser');
+        const sb = supabaseBrowser();
+        const { data: s } = await sb.auth.getSession();
+        const token = s?.session?.access_token;
+        if (token) headers.Authorization = `Bearer ${token}`;
+      } catch { /* no-op */ }
+
+      const r = await fetch(`/api/admin/history?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers,
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j?.error || `HTTP ${r.status}`);
+      }
+      setItems(prev => prev.filter(x => x.id !== id));
+      setSnack('ลบรายการแล้ว');
+    } catch (e: any) {
+      setSnack(`ลบไม่สำเร็จ: ${e.message || 'error'}`);
+    } finally {
+      setConfirmId(null);
+    }
+  };
+
+  // role screens
+  if (loadingRole) {
+    return (
+      <Box className="container" sx={{ py: 4, display: 'grid', placeItems: 'center' }}>
+        <CircularProgress />
+        <Typography variant="body2" sx={{ mt: 2 }}>กำลังตรวจสอบสิทธิ์…</Typography>
+      </Box>
+    );
+  }
+  if (role !== 'admin') {
+    return (
+      <Box className="container" sx={{ py: 6, textAlign: 'center' }}>
+        <Typography variant="h5" fontWeight={700}>เฉพาะผู้ดูแลระบบเท่านั้น</Typography>
+        <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>
+          กรุณาเข้าสู่ระบบด้วยบัญชีแอดมิน หรือขอสิทธิ์จากผู้ดูแลระบบ
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
-    <main>
-      
-      <Container className="container" sx={{ py: 4 }}>
-        {/* หัวข้อ + กล่องค้นหา (ชิดขวา) */}
-        <Box
-          sx={{
-            mb: 2.5,
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <Typography variant="h6" fontWeight={800} sx={{ flex: 1 }}>
-            ประวัติการใช้งาน
-          </Typography>
-
+    <Box className="container" sx={{ py: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+        <Typography variant="h5" fontWeight={700}>ประวัติระบบ (Audit Logs)</Typography>
+        <Tooltip title="รีเฟรช">
+          <span>
+            <IconButton onClick={load} disabled={loading}>
+              <RefreshIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
           <TextField
-            placeholder="ค้นหา: ชื่อผลงาน หรือ ชื่อผู้วิจัย"
             size="small"
+            placeholder="ค้นหา (action, table, id, meta)"
             value={q}
-            onChange={(e) => setQ(e.target.value)}
-            sx={{
-              width: 360,
-              "& .MuiOutlinedInput-root": { borderRadius: 99, height: 40 },
-            }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              },
-            }}
+            onChange={e => setQ(e.target.value)}
+            InputProps={{ startAdornment: <SearchIcon style={{ marginRight: 8 }} /> as any }}
           />
         </Box>
+      </Box>
 
-        {/* การ์ดตาราง */}
-        <Paper
-          variant="outlined"
-          sx={{
-            borderColor: PSU.cardBorder,
-            boxShadow: PSU.cardShadow,
-            borderRadius: 3,
-            overflow: "hidden",
-          }}
-        >
+      <Paper elevation={0} sx={{ overflow: 'hidden', borderRadius: 2 }}>
+        {err ? (
+          <Box sx={{ p: 3, color: 'error.main' }}>
+            <Typography variant="body2">โหลดข้อมูลไม่สำเร็จ: {err}</Typography>
+          </Box>
+        ) : loading ? (
+          <Box sx={{ p: 3, display: 'grid', placeItems: 'center' }}>
+            <CircularProgress />
+          </Box>
+        ) : (
           <TableContainer>
-            <Table>
+            <Table size="small">
               <TableHead>
-                <TableRow
-                  sx={{
-                    "& th": {
-                      bgcolor: "#F7F9FC",
-                      color: PSU.text,
-                      fontWeight: 700,
-                      borderBottom: `1px solid ${PSU.cardBorder}`,
-                    },
-                  }}
-                >
-                  <TableCell sx={{ width: 100 }}>
-                    <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                      UID <ArrowDropDownIcon fontSize="small" sx={{ opacity: 0.7 }} />
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                      Name <ArrowDropDownIcon fontSize="small" sx={{ opacity: 0.7 }} />
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                      Address <ArrowDropDownIcon fontSize="small" sx={{ opacity: 0.7 }} />
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ width: 120 }}>
-                    <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                      SCNO <ArrowDropDownIcon fontSize="small" sx={{ opacity: 0.7 }} />
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ width: 120 }}>
-                    <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                      Amount <ArrowDropDownIcon fontSize="small" sx={{ opacity: 0.7 }} />
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ width: 120, textAlign: "right" }}>Action</TableCell>
+                <TableRow>
+                  <TableCell width={220}>เวลา</TableCell>
+                  <TableCell>ตาราง</TableCell>
+                  <TableCell>การกระทำ</TableCell>
+                  <TableCell>บันทึก ID</TableCell>
+                  <TableCell>ผู้กระทำ</TableCell>
+                  <TableCell>รายละเอียด</TableCell>
+                  <TableCell align="right" width={72}>ลบ</TableCell>
                 </TableRow>
               </TableHead>
-
               <TableBody>
-                {rows.map((r) => (
-                  <TableRow
-                    key={r.uid}
-                    sx={{
-                      "& td": {
-                        borderBottom: `1px solid ${PSU.cardBorder}`,
-                      },
-                    }}
-                  >
-                    <TableCell>{r.uid}</TableCell>
-                    <TableCell>{r.name}</TableCell>
-                    <TableCell>{r.address}</TableCell>
-                    <TableCell>{r.scno}</TableCell>
-                    <TableCell>{r.amount}</TableCell>
+                {filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 6, opacity: 0.7 }}>
+                      ไม่มีข้อมูล
+                    </TableCell>
+                  </TableRow>
+                ) : filtered.map(row => (
+                  <TableRow key={row.id} hover>
+                    <TableCell>
+                      {row.created_at ? new Date(row.created_at).toLocaleString() : '-'}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>{row.table_name || '-'}</TableCell>
+                    <TableCell>{row.action || '-'}</TableCell>
+                    <TableCell>{row.record_id || '-'}</TableCell>
+                    <TableCell>{row.actor_id || '-'}</TableCell>
+                    <TableCell sx={{ maxWidth: 360 }}>
+                      <code style={{ fontSize: 12 }}>
+                        {row.meta ? JSON.stringify(row.meta) : '-'}
+                      </code>
+                    </TableCell>
                     <TableCell align="right">
-                      {/* ปุ่มลบสไตล์พิลสีแดง + ไอคอนถังขยะ */}
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        color="error"
-                        startIcon={<DeleteOutlineIcon />}
-                        sx={{
-                          borderRadius: 999,
-                          textTransform: "none",
-                          fontWeight: 700,
-                          px: 1.5,
-                          "& .MuiSvgIcon-root": { fontSize: 18 },
-                        }}
-                        onClick={() => alert(`ลบแถว UID ${r.uid}`)}
-                      >
-                        ลบ
-                      </Button>
-                      {/* หรือใช้ไอคอนล้วน:
-                      <IconButton color="error" size="small"><DeleteOutlineIcon/></IconButton>
-                      */}
+                      <Tooltip title="ลบ">
+                        <span>
+                          <IconButton color="error" onClick={() => setConfirmId(row.id)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 ))}
-
-                {rows.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 6, color: PSU.subtext }}>
-                      ไม่พบข้อมูลที่ตรงคำค้นหา
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
           </TableContainer>
-        </Paper>
-      </Container>
-    </main>
+        )}
+      </Paper>
+
+      {/* Confirm Dialog */}
+      <Dialog open={!!confirmId} onClose={() => setConfirmId(null)}>
+        <DialogTitle>ยืนยันการลบ</DialogTitle>
+        <DialogContent>
+          <DialogContentText>ต้องการลบประวัติรายการนี้หรือไม่?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmId(null)}>ยกเลิก</Button>
+          <Button color="error" onClick={() => confirmId && onDelete(confirmId)}>ลบ</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={2500}
+        message={snack || ''}
+      />
+    </Box>
   );
 }

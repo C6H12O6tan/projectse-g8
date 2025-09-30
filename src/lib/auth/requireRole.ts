@@ -1,7 +1,7 @@
 // src/lib/auth/requireRole.ts
 import type { NextRequest } from "next/server";
 import { supabaseFromRequest } from "@/lib/supabase/route";
-import { supabaseRSC } from "@/lib/supabase/rsc";
+import { supabaseRSC } from "../supabase/rsc";
 
 /** ผลลัพธ์มาตรฐานของการเช็คสิทธิ์แอดมิน */
 type Fail = { ok: false; status: 401 | 403 };

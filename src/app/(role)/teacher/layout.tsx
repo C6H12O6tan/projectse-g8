@@ -1,20 +1,32 @@
-// src/app/(role)/teacher/layout.tsx
-import type { ReactNode } from "react";
-import { redirect } from "next/navigation";
-import { supabaseRSCClient } from "@/lib/supabase/app-rsc";
+'use client';
 
-export default async function TeacherLayout({ children }: { children: ReactNode }) {
-  const supabase = await supabaseRSCClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useRole } from '@/lib/useRole';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role,fullname,email")
-    .eq("id", user.id)
-    .single();
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { data, loading } = useRole();
+  const role = data?.role ?? null;
 
-  if (profile?.role !== "teacher") redirect("/");
+  useEffect(() => {
+    if (loading) return;
+    // ไม่ใช่ teacher → เด้งไป /login (หรือจะไป "/" ก็ได้)
+    if (role !== 'teacher') {
+      router.replace('/login?next=' + encodeURIComponent(pathname));
+    }
+  }, [loading, role, router, pathname]);
+
+  if (loading || role !== 'teacher') {
+    return (
+      <Box className="container" sx={{ py: 4, display: 'grid', placeItems: 'center' }}>
+        <CircularProgress />
+        <Typography variant="body2" sx={{ mt: 2 }}>กำลังตรวจสอบสิทธิ์…</Typography>
+      </Box>
+    );
+  }
 
   return <>{children}</>;
 }

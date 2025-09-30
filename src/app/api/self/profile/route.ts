@@ -1,54 +1,64 @@
-import { NextResponse } from "next/server";
-import { supabaseRSCClient } from "@/lib/supabase/app-rsc";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { createClient } from "@supabase/supabase-js";
 
-// GET: โปรไฟล์ของผู้ใช้ปัจจุบัน
-export async function GET() {
-  try {
-    const sb = await supabaseRSCClient();
-    const { data: { user }, error: uerr } = await sb.auth.getUser();
-    if (uerr) throw uerr;
-    if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+const Update = z.object({
+  display_name: z.string().trim().optional(),
+  fullname: z.string().trim().optional(),
+  phone: z.string().trim().optional(),
+});
 
-    const { data, error } = await sb
-      .from("profiles")
-      .select("id, email, display_name, phone, role, created_at")
-      .eq("id", user.id)
-      .single();
-    if (error) throw error;
+async function getUserFromBearer(req: NextRequest) {
+  const auth = req.headers.get("authorization") || "";
+  if (!auth.toLowerCase().startsWith("bearer ")) return null;
 
-    return NextResponse.json(data);
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "failed" }, { status: 400 });
-  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const sb = createClient(url, anon, {
+    global: { headers: { Authorization: auth } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data } = await sb.auth.getUser();
+  return { user: data?.user ?? null, sb };
 }
 
-// PATCH: อัปเดต display_name / phone (ของตัวเอง)
-export async function PATCH(req: Request) {
-  try {
-    const sb = await supabaseRSCClient();
-    const { data: { user }, error: uerr } = await sb.auth.getUser();
-    if (uerr) throw uerr;
-    if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+// GET: อ่านโปรไฟล์ของตัวเอง (ใช้ RLS; ต้องแนบ Bearer)
+export async function GET(req: NextRequest) {
+  const auth = await getUserFromBearer(req);
+  if (!auth?.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-    const { display_name, phone } = (await req.json()) as {
-      display_name?: string;
-      phone?: string;
-    };
+  const { sb, user } = auth;
+  const { data, error } = await sb
+    .from("profiles")
+    .select("id,email,display_name,fullname,phone,role")
+    .eq("id", user.id)
+    .maybeSingle();
 
-    const patch: Record<string, any> = {};
-    if (typeof display_name !== "undefined") patch.display_name = display_name;
-    if (typeof phone !== "undefined") patch.phone = phone;
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data ?? {});
+}
 
-    if (Object.keys(patch).length > 0) {
-      const { error } = await sb.from("profiles").update(patch).eq("id", user.id);
-      if (error) throw error;
-    }
+// PATCH: อัปเดตโปรไฟล์ตัวเอง (ใช้ RLS; ต้องแนบ Bearer)
+export async function PATCH(req: NextRequest) {
+  const auth = await getUserFromBearer(req);
+  if (!auth?.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-    // optional: sync metadata
-    await sb.auth.updateUser({ data: { display_name, phone } }).catch(() => {});
-
-    return NextResponse.json({ ok: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "failed" }, { status: 400 });
+  const json = await req.json().catch(() => ({}));
+  const parsed = Update.safeParse(json);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "invalid payload" }, { status: 400 });
   }
+
+  const { sb, user } = auth;
+  const payload = parsed.data;
+
+  const { data, error } = await sb
+    .from("profiles")
+    .update(payload)
+    .eq("id", user.id)
+    .select("id,email,display_name,fullname,phone,role")
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data ?? {});
 }
