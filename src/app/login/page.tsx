@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TextField, Button, Box, Typography, CircularProgress, Snackbar } from '@mui/material';
+import {
+  TextField, Button, Box, Typography, CircularProgress, Snackbar,
+  Container, Stack, InputAdornment, Paper
+} from '@mui/material';
+import PersonOutline from '@mui/icons-material/PersonOutline';
+import LockOutlined from '@mui/icons-material/LockOutlined';
 import { roleHome } from '@/lib/roleHome';
 
-type Role = 'admin'|'officer'|'teacher'|'external'|null;
+type Role = 'admin' | 'officer' | 'teacher' | 'external' | null;
 type RoleResp = { user: { id: string; email: string } | null; role: Role };
 
 export default function LoginPage() {
@@ -13,9 +18,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
-  const [snack, setSnack] = useState<string|null>(null);
+  const [snack, setSnack] = useState<string | null>(null);
 
-  // ถ้าล็อกอินอยู่แล้ว → เด้งตามบทบาท (เช็คผ่าน API อย่างเดียว ไม่แตะ Supabase ระหว่าง render)
+  // ===== (เดิม) เช็คสถานะล็อกอินผ่าน API — ไม่แก้ =====
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -23,11 +28,12 @@ export default function LoginPage() {
         const r = await fetch('/api/auth/role', { cache: 'no-store' });
         const j: RoleResp = await r.json();
         if (!cancel && j?.user) router.replace(roleHome(j.role ?? 'external'));
-      } catch {}
+      } catch { }
     })();
     return () => { cancel = true; };
   }, [router]);
 
+  // ===== (เดิม) submit เข้าสู่ระบบ — ไม่แก้ =====
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -37,7 +43,6 @@ export default function LoginPage() {
       const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
 
-      // ดึง access_token แล้วแนบไปให้ API
       const { data: s } = await sb.auth.getSession();
       const token = s?.session?.access_token;
 
@@ -46,7 +51,6 @@ export default function LoginPage() {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const j: RoleResp = await r.json();
-
       router.replace(roleHome(j.role ?? 'external'));
     } catch (err: any) {
       setSnack(err.message || 'เข้าสู่ระบบไม่สำเร็จ');
@@ -56,20 +60,147 @@ export default function LoginPage() {
   };
 
   return (
-    <Box className="container" sx={{ py: 6, maxWidth: 520 }}>
-      <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>เข้าสู่ระบบ</Typography>
-      <Box component="form" onSubmit={onSubmit} sx={{ display: 'grid', gap: 2 }}>
-        <TextField label="อีเมล" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-        <TextField label="รหัสผ่าน" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button type="submit" variant="contained" disabled={busy}>
-            {busy ? <CircularProgress size={20} sx={{ mr: 1 }} /> : null}
-            เข้าสู่ระบบ
-          </Button>
-          <Button type="button" onClick={() => setSnack('ลืมรหัสผ่าน: ติดต่อผู้ดูแลระบบ')}>ลืมรหัสผ่าน?</Button>
-        </Box>
+    <main>
+      {/* ===== แบนเนอร์ด้านบน (วางไฟล์ที่ public/login-banner.jpg) ===== */}
+      <Box
+        component="img"
+        src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/logo-login.png`} // ← ใช้ชื่อไฟล์ที่มีจริงใน public
+        alt=""
+        sx={{
+          width: '100%',
+          height: { xs: 220, md: 300 },
+          objectFit: 'contain',
+          display: 'block',            // กันช่องว่างใต้รูป
+          borderBottom: '8px solid #0f2e57',
+        }}
+      />
+
+      {/* ===== โซนฟอร์มพื้นกรมท่า (ไม่มีแถบขาวด้านล่างแล้ว) ===== */}
+      <Box
+        sx={{
+          bgcolor: '#0f2e57',
+          py: { xs: 8, md: 10 },
+          minHeight: 'calc(100dvh - 300px)', // ให้ส่วนนี้สูงพอหลังแบนเนอร์ (แก้ค่าเท่าความสูงแบนเนอร์ md)
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <Container maxWidth="sm" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+          <Typography align="center" variant="h4" fontWeight={900} sx={{ color: '#fff', mb: 3 }}>
+            ระบบบริหารจัดการผลงานตีพิมพ์
+          </Typography>
+
+          {/* การ์ดฟอร์มโปร่ง */}
+          <Paper elevation={0} sx={{ bgcolor: 'transparent', p: 0, mx: 'auto', width: '100%', maxWidth: 520 }}>
+            <Box component="form" onSubmit={onSubmit}>
+              <Stack spacing={2}>
+                <TextField
+                  placeholder="USERNAME"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  type="email"
+                  autoComplete="username"
+                  fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start" sx={{ color: '#cfe0ff' }}>
+                        <PersonOutline />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 999,
+                      color: '#fff',
+                      bgcolor: 'transparent',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.8)' },
+                      '&:hover fieldset': { borderColor: '#fff' },
+                      height: 48,
+                      px: 1,
+                    },
+                    '& input::placeholder': { color: 'rgba(255,255,255,0.9)', letterSpacing: 0.5 },
+                    '& input:-webkit-autofill': {
+                      WebkitBoxShadow: '0 0 0 1000px transparent inset',
+                      WebkitTextFillColor: '#fff',
+                      caretColor: '#fff',
+                      transition: 'background-color 9999s ease-out 0s',
+                    },
+                  }}
+                  required
+                />
+
+                <TextField
+                  placeholder="PASSWORD"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  type="password"
+                  autoComplete="current-password"
+                  fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start" sx={{ color: '#cfe0ff' }}>
+                        <LockOutlined />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 999,
+                      color: '#fff',
+                      bgcolor: 'transparent',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.8)' },
+                      '&:hover fieldset': { borderColor: '#fff' },
+                      height: 48,
+                      px: 1,
+                    },
+                    '& input::placeholder': { color: 'rgba(255,255,255,0.9)', letterSpacing: 0.5 },
+                    '& input:-webkit-autofill': {
+                      WebkitBoxShadow: '0 0 0 1000px transparent inset',
+                      WebkitTextFillColor: '#fff',
+                      caretColor: '#fff',
+                      transition: 'background-color 9999s ease-out 0s',
+                    },
+                  }}
+                  required
+                />
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={busy}
+                  fullWidth
+                  sx={{
+                    mt: 1,
+                    py: 1.1,
+                    borderRadius: 999,
+                    bgcolor: '#ffffff',
+                    color: '#0f2e57',
+                    fontWeight: 800,
+                    letterSpacing: 0.5,
+                    '&:hover': { bgcolor: '#f6f8ff' },
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
+                  }}
+                >
+                  {busy ? <CircularProgress size={18} sx={{ mr: 1 }} /> : null}
+                  LOGIN
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={() => setSnack('ลืมรหัสผ่าน: ติดต่อผู้ดูแลระบบ')}
+                  sx={{ color: 'rgba(255,255,255,0.9)', alignSelf: 'center' }}
+                >
+                  FORGOT PASSWORD?
+                </Button>
+              </Stack>
+            </Box>
+          </Paper>
+        </Container>
       </Box>
+
+      {/* ❌ ลบกล่องสีขาวด้านล่างออกแล้ว เพื่อให้เหมือนแบบ */}
       <Snackbar open={!!snack} onClose={() => setSnack(null)} autoHideDuration={2600} message={snack || ''} />
-    </Box>
+    </main>
   );
 }

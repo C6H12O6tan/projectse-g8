@@ -85,23 +85,7 @@ export default function TopBarTeacher({ profile }: Props) {
 
           <Box sx={{ flex: 1 }} />
 
-          <TextField
-            size="small"
-            placeholder="ค้นหา…"
-            sx={{ mr: 1, "& .MuiOutlinedInput-root": { borderRadius: 999, height: 38 } }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          <Button variant="outlined" sx={{ borderRadius: 999, height: 38, borderColor: PSU.cardBorder }}>
-            ADVANCE
-          </Button>
+          
 
           {/* ถ้ามี UserMenu: ใช้ prop ตาม type ของมันเท่านั้น */}
           {typeof UserMenu === "function" ? (
