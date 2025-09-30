@@ -3,38 +3,34 @@ import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 
-/**
- * Server client ที่อ่าน session จาก cookies ของ request ปัจจุบัน
- * - NOTE: ใน Next 15+ ต้อง await cookies()
- */
-export async function supabaseServer() {
-  const cookieStore = await cookies(); // ✅ ต้อง await
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(_name: string, _value: string, _options: CookieOptions) {
-          // no-op ใน server context
-        },
-        remove(_name: string, _options: CookieOptions) {
-          // no-op ใน server context
-        },
+// ✅ สำหรับ API/Server ฝั่งที่ต้อง “ถือ session จากคุกกี้”
+export async function supabaseServer() {
+  const cookieStore = await cookies(); // <— ต้อง await
+  return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value;
       },
-    }
-  );
+      set(name: string, value: string, options: CookieOptions) {
+        // no-op บน route handler
+      },
+      remove(name: string, options: CookieOptions) {
+        // no-op บน route handler
+      },
+    },
+  });
 }
 
-/**
- * Admin client (service role) — ใช้เฉพาะฝั่ง server
- * ต้องมี env: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
- */
-export async function supabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createClient(url, serviceKey);
+// ✅ สำหรับงานเบื้องหลัง/ตรวจ token/ข้าม RLS
+export function supabaseService() {
+  if (!SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
+  }
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
 }

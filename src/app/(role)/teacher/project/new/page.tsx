@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Container from '@mui/material/Container';
 import TextField from '@mui/material/TextField';
@@ -11,21 +11,11 @@ import TopBarTeacher from '@/components/TopBarTeacher';
 
 type FormState = {
   title: string;
-  abstract: string;
+  summary: string;      // ⬅ เปลี่ยนชื่อฟิลด์ให้ตรง DB
   authors: string;
   coauthors: string;
-  year: string;        // เก็บเป็นสตริงเพื่อควบคุมอินพุต
+  year: string;         // รับเป็น string แล้วแปลงก่อนส่ง
   location: string;
-};
-
-const clampYear = (raw: string) => {
-  const digits = (raw.match(/\d+/g)?.join('') ?? '').replace(/^0+(?=\d)/, '');
-  if (!digits) return '';
-  const n = Number(digits);
-  if (Number.isNaN(n)) return '';
-  if (n < 0) return '0';
-  if (n > 3000) return '3000';
-  return String(n);
 };
 
 export default function TeacherProjectNewPage() {
@@ -33,7 +23,7 @@ export default function TeacherProjectNewPage() {
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState<FormState>({
     title: '',
-    abstract: '',
+    summary: '',
     authors: '',
     coauthors: '',
     year: '',
@@ -42,55 +32,59 @@ export default function TeacherProjectNewPage() {
 
   const onChange =
     (k: keyof FormState) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      if (k === 'year') {
-        const v = clampYear(e.target.value);
-        setForm((s) => ({ ...s, year: v }));
-      } else {
+      (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm((s) => ({ ...s, [k]: e.target.value }));
-      }
-    };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
     setBusy(true);
     try {
-      const yearClean = clampYear(form.year);
-      const payload = {
-        title: form.title.trim(),
-        abstract: form.abstract.trim() || null,
-        authors: form.authors.trim() || null,
-        coauthors: form.coauthors.trim() || null,
-        year: yearClean ? Number(yearClean) : null,
-        location: form.location.trim() || null,
-      };
-
-      if (!payload.title) throw new Error('กรุณากรอกชื่อผลงาน');
-      if (payload.year !== null && (payload.year < 0 || payload.year > 3000)) {
-        throw new Error('ปีที่ตีพิมพ์ต้องเป็นตัวเลขระหว่าง 0–3000');
+      const y = form.year.trim() ? Number(form.year) : null;
+      if (y !== null && (!Number.isInteger(y) || y < 0 || y > 3000)) {
+        alert('ปีที่ตีพิมพ์ต้องเป็นตัวเลข 0–3000');
+        return;
       }
 
+      // 1) ดึง token และ “บังคับมี token” ก่อนยิง API
       const { supabaseBrowser } = await import('@/lib/supabaseBrowser');
       const sb = supabaseBrowser();
       const { data: s } = await sb.auth.getSession();
       const token = s?.session?.access_token;
+      if (!token) {
+        alert('กรุณาเข้าสู่ระบบก่อน');
+        return;
+      }
+
+      const payload = {
+        title: form.title.trim(),
+        summary: form.summary.trim(),
+        authors: form.authors.trim(),
+        coauthors: form.coauthors.trim(),
+        year: y,
+        location: form.location.trim() || null,
+      };
 
       const res = await fetch('/api/teacher/projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`, // 2) แนบ token แน่นอน
         },
+        credentials: 'include',             // 3) ส่งคุกกี้ไปด้วย (กันไว้)
         body: JSON.stringify(payload),
       });
 
-      const j = await res.json();
-      if (!res.ok) throw new Error(j?.error || 'สร้างโปรเจกต์ไม่สำเร็จ');
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(j?.error || `Create failed (${res.status})`);
+      }
 
-      r.replace(j?.id ? `/teacher/project/${j.id}` : '/teacher/project');
+      // ไปหน้ารายละเอียด
+      location.replace(`/teacher/project/${j.id}`);
     } catch (err: any) {
       alert(err?.message || 'สร้างโปรเจกต์ไม่สำเร็จ');
+      console.error(err);
     } finally {
       setBusy(false);
     }
@@ -106,58 +100,43 @@ export default function TeacherProjectNewPage() {
 
         <form onSubmit={onSubmit}>
           <Stack spacing={2}>
-            <TextField
-              label="ชื่อผลงาน"
-              required
-              fullWidth
-              value={form.title}
-              onChange={onChange('title')}
-            />
+            <TextField label="ชื่อผลงาน" required value={form.title} onChange={onChange('title')} />
 
             <TextField
               label="บทคัดย่อ"
+              placeholder="สรุปใจความสำคัญของผลงาน"
               multiline
               minRows={5}
-              fullWidth
-              value={form.abstract}
-              onChange={onChange('abstract')}
+              value={form.summary}            // ⬅ เปลี่ยนเป็น summary
+              onChange={onChange('summary')}
             />
 
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  label="ชื่อผู้เขียน"
-                  fullWidth
-                  value={form.authors}
-                  onChange={onChange('authors')}
-                />
+                <TextField label="ชื่อผู้เขียน" value={form.authors} onChange={onChange('authors')} />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  label="ชื่อผู้เขียน (ร่วม)"
-                  fullWidth
-                  value={form.coauthors}
-                  onChange={onChange('coauthors')}
-                />
+                <TextField label="ชื่อผู้เขียน (ร่วม)" value={form.coauthors} onChange={onChange('coauthors')} />
               </Grid>
+
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   label="ปีที่ตีพิมพ์"
-                  placeholder="เช่น 2025 (ไม่เกิน 3000)"
+                  inputMode="numeric"
+                  placeholder="เช่น 2024"
                   fullWidth
                   value={form.year}
-                  onChange={onChange('year')}
-                  // ⬇⬇ สำคัญ: ใช้ inputProps แทน pattern บน TextField โดยตรง
-                  inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                  onChange={(e) => {
+                    // รับเฉพาะตัวเลข, ไม่บังคับ 4 หลัก, ตัดเกิน 4 ตัว
+                    const next = e.target.value.replace(/\D+/g, '').slice(0, 4);
+                    setForm((s) => ({ ...s, year: next }));
+                  }}
+                  helperText="กรอกตัวเลขได้ (0–3000)"
                 />
               </Grid>
+
               <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  label="สถานที่จัดเก็บ"
-                  fullWidth
-                  value={form.location}
-                  onChange={onChange('location')}
-                />
+                <TextField label="สถานที่จัดเก็บ" value={form.location} onChange={onChange('location')} />
               </Grid>
             </Grid>
 
