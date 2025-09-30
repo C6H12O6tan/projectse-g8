@@ -1,47 +1,40 @@
 // src/lib/supabaseServer.ts
+import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 
 /**
- * สร้าง Supabase client สำหรับฝั่งเซิร์ฟเวอร์ (RSC/Route Handler)
- * - ไม่มีการ import 'next/headers' ที่ top-level อีกต่อไป
- * - ป้องกันการเรียกจากฝั่ง client
+ * Server client ที่อ่าน session จาก cookies ของ request ปัจจุบัน
+ * - NOTE: ใน Next 15+ ต้อง await cookies()
  */
 export async function supabaseServer() {
-  if (typeof window !== 'undefined') {
-    throw new Error('supabaseServer() must be used on the server side only');
-  }
+  const cookieStore = await cookies(); // ✅ ต้อง await
 
-  // ✅ import ตอนรันจริงฝั่ง server เท่านั้น
-  const { cookies, headers } = await import('next/headers');
-  const cookieStore = await cookies();
-  const hdrs = await headers();
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  // Next 15+: ต้องใช้ getAll/setAll ตามสเปกใหม่
-  const client = createServerClient(url, anon, {
-    cookies: {
-      getAll: () => cookieStore.getAll(),
-      setAll: (cookiesToSet: { name: string; value: string; options: CookieOptions }[]) => {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          cookieStore.set(name, value, options);
-        });
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(_name: string, _value: string, _options: CookieOptions) {
+          // no-op ใน server context
+        },
+        remove(_name: string, _options: CookieOptions) {
+          // no-op ใน server context
+        },
       },
-    },
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-    global: {
-      headers: {
-        // ถ้าต้องการ pass header บางตัวไปยัง Supabase
-        'X-Forwarded-For': hdrs.get('x-forwarded-for') ?? '',
-      },
-    },
-  });
-
-  return client;
+    }
+  );
 }
 
-export default supabaseServer;
+/**
+ * Admin client (service role) — ใช้เฉพาะฝั่ง server
+ * ต้องมี env: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ */
+export async function supabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  return createClient(url, serviceKey);
+}

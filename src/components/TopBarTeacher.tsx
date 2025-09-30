@@ -14,6 +14,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { PSU } from "@/theme/brand";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabase/client";
 // ถ้ามี UserMenu อยู่ให้ import; ถ้าไม่มี ให้ลบบรรทัดนี้ได้
 import UserMenu from "./UserMenu";
@@ -77,10 +78,10 @@ export default function TopBarTeacher({ profile }: Props) {
               "& .MuiTab-root.Mui-selected": { color: PSU.navy },
             }}
           >
-            <Tab label="HOME" />
-            <Tab label="PROJECT" />
-            <Tab label="STATUS" />
-            <Tab label="SETTING" />
+            <Tab label="HOME" component={Link} href="/teacher" />
+            <Tab label="PROJECT" component={Link} href="/teacher/project" />
+            <Tab label="STATUS" component={Link} href="/teacher/status" />
+            <Tab label="SETTING" component={Link} href="/teacher/setting" />
           </Tabs>
 
           <Box sx={{ flex: 1 }} />
