@@ -1,33 +1,33 @@
 "use client";
+
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
 import CardContent from "@mui/material/CardContent";
+import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import { PSU } from "@/theme/brand";
+import ChecklistRounded from "@mui/icons-material/ChecklistRounded";
+
 import TopBarOfficer from "@/components/TopBarOfficer";
 import ProjectThumb from "@/components/cards/ProjectThumb";
 import SearchBarRow from "@/components/teacher/SearchBarRow";
-import ChecklistRounded from "@mui/icons-material/ChecklistRounded";
+import { PSU } from "@/theme/brand";
 
-const REVIEW_BASE = "/officer/review";
-
+/** ——— MOCK DATA ——— */
 const MY = [
-  { id: "p1", title: "PhenoRobot", img: "/mock/1.jpg", tag: "UPDATE: 2025", author: "ดร.ธีระ ภัทรพงษ์นันท์" },
-  { id: "p2", title: "AR for Classroom", img: "/mock/2.jpg", tag: "UPDATE: 2024", author: "ดร.สมชาย อินทร์ทอง" },
-  { id: "p3", title: "Learning Analytics", img: "/mock/3.jpg", tag: "UPDATE: 2023", author: "ดร.ปริณา ตั้งมั่น" },
-  { id: "p4", title: "Digital Learning in HE", img: "/mock/4.jpg", tag: "UPDATE: 2025", author: "ดร.บุศบุศ กภักดีผล" },
+  { id: "p4", title: "Digital Learning in HE (MOOC)", img: "/mock/4.jpg", tag: "UPDATE: 2025", author: "ดร.บุศบุศ กภักดีผล" },
 ];
 
-// ช่วยแม็พชื่อโปรเจ็กต์ที่เกี่ยวกับ MOOC ให้ไป path /officer/review/mooc
-function getReviewPathIfMOOC(title: string): string | null {
+/** ลิงก์ไปหน้าตรวจสอบ/ยืนยัน
+ *  - ถ้าชื่อมีคำว่า MOOC (หรือ Digital Learning) จะพาไปรีวิวหน้า MOOC โดยเฉพาะ
+ *  - อย่างอื่นแนบ ?project=<id> ไปหน้ารีวิวรวม
+ */
+function getReviewHref(title: string, id: string) {
   const t = title.toLowerCase();
-  if (t.includes("mooc") || t.includes("digital learning")) {
-    return `${REVIEW_BASE}/mooc`;
-  }
-  return null;
+  if (t.includes("mooc") || t.includes("digital learning")) return `/officer/review/mooc`;
+  return `/officer/review?project=${encodeURIComponent(id)}`;
 }
 
 export default function OfficerProjectList() {
@@ -35,7 +35,16 @@ export default function OfficerProjectList() {
     <main>
       <TopBarOfficer />
       <Container className="container" sx={{ py: { xs: 2.5, md: 3 } }}>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 1.25 }}>
+        {/* หัวข้อ + แถบค้นหา/ปุ่มไปรีวิวรวม */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 1,
+            mb: 1.25,
+          }}
+        >
           <Box>
             <Typography variant="h6" fontWeight={900} sx={{ lineHeight: 1, mb: 0.5 }}>
               Projects
@@ -45,18 +54,17 @@ export default function OfficerProjectList() {
             </Typography>
           </Box>
 
-          {/* ทำให้คอมแพคขึ้น */}
           <Box sx={{ minWidth: { xs: "100%", sm: 420 }, maxWidth: 520 }}>
             <SearchBarRow
               rightLabel="ตรวจสอบทั้งหมด"
               rightVariant="contained"
-              rightHref={REVIEW_BASE}
+              rightHref="/officer/review"
             />
           </Box>
         </Box>
 
         <Grid container spacing={2}>
-          {/* การ์ดไปหน้าตรวจสอบทั้งหมด */}
+          {/* การ์ดไปหน้าตรวจสอบรวม */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Card
               elevation={0}
@@ -70,8 +78,7 @@ export default function OfficerProjectList() {
               }}
             >
               <CardActionArea
-                component="a"
-                href={REVIEW_BASE} // ✅ คลิกแล้วไปหน้าตรวจสอบทั้งหมด
+                href="/officer/review"
                 sx={{ height: "100%", display: "grid", placeItems: "center", p: 1.5 }}
               >
                 <CardContent sx={{ textAlign: "center" }}>
@@ -87,20 +94,25 @@ export default function OfficerProjectList() {
             </Card>
           </Grid>
 
-          {/* รายการโปรเจ็กต์ */}
+          {/* การ์ดโปรเจค + ปุ่ม “ยืนยัน” มุมขวาล่าง */}
           {MY.map((it) => {
-            // ถ้าเป็นโปรเจ็กต์สาย MOOC ให้เด้งไปหน้ายืนยันเฉพาะตัว
-            const moocReview = getReviewPathIfMOOC(it.title);
-            const href = moocReview ?? `/officer/project/${it.id}`;
+            const reviewHref = getReviewHref(it.title, it.id);
+            // ถ้าอยากให้ “MOOC” คลิกทั้งการ์ดไปยืนยันทันที ให้ใช้ reviewHref แทน detailHref ได้
+            const detailHref = `/officer/review/${it.id}`;
+
             return (
               <Grid key={it.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                <ProjectThumb
-                  href={href}
-                  image={it.img}
-                  title={it.title}
-                  author={it.author}
-                  tag={it.tag}
-                />
+                <Box sx={{ position: "relative" }}>
+                  <ProjectThumb
+                    href={detailHref}
+                    image={it.img}
+                    title={it.title}
+                    author={it.author}
+                    tag={it.tag}
+                  />
+
+              
+                </Box>
               </Grid>
             );
           })}
