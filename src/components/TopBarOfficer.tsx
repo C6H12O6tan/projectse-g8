@@ -91,7 +91,7 @@ export default function TopBarOfficer() {
           <Menu anchorEl={anchor} open={open} onClose={() => setAnchor(null)}>
             <MenuItem disabled>{email}</MenuItem>
             <Divider />
-            <MenuItem onClick={() => router.push("/officer")}>Logout</MenuItem>
+            <MenuItem onClick={() => router.push("/login")}>Logout</MenuItem>
           </Menu>
         </Toolbar>
       </div>
