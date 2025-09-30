@@ -1,89 +1,51 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { supabaseServer } from "@/lib/supabaseServer";
-import { serializePublication } from "@/lib/serialize";
-import { requireRole } from "@/lib/auth";
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { createClient } from '@supabase/supabase-js';
 
-const QuerySchema = z.object({
-  q: z.string().trim().optional(),
-  dept: z.string().trim().optional(),
-  type: z.string().trim().optional(),
-  year: z.coerce.number().int().optional(),
-  status: z.string().trim().optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-  cursor: z.string().uuid().optional(),
-  sort: z.enum(["newest","oldest"]).default("newest"),
+const Query = z.object({
+  q: z.string().optional(),
+  dept: z.string().optional(),
+  type: z.string().optional(),
+  year: z.string().optional(), // รับเป็น string แล้วค่อยแปลงเป็น number
+  limit: z.coerce.number().min(1).max(100).default(24),
+  offset: z.coerce.number().min(0).default(0),
 });
 
 export async function GET(req: NextRequest) {
-  const qs = QuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
-  const sb = await supabaseServer();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const sb = createClient(url, anon, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 
-  let q = sb.from("publications").select("*");
+  const sp = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const parsed = Query.safeParse(sp);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'invalid query' }, { status: 400 });
+  }
+  const { q, dept, type, year, limit, offset } = parsed.data;
 
-  if (qs.q)      q = q.ilike("title", `%${qs.q}%`);
-  if (qs.dept)   q = q.eq("dept", qs.dept);
-  if (qs.type)   q = q.eq("type", qs.type);
-  if (qs.year)   q = q.eq("year", qs.year);
-  if (qs.status) q = q.eq("status", qs.status);
+  let query = sb
+    .from('publications')
+    .select('id, project_id, title, abstract, type, authors, year, dept, status, thumb_url, created_at, updated_at', { count: 'exact' })
+    .eq('status', 'published') // เฉพาะเผยแพร่แล้ว
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
 
-  q = q.order("year", { ascending: qs.sort === "oldest" })
-       .order("created_at", { ascending: qs.sort === "oldest" });
+  if (q && q.trim()) {
+    const k = `%${q.trim()}%`;
+    // ค้นทั้ง title/abstract/authors
+    query = query.or(`title.ilike.${k},abstract.ilike.${k},authors.ilike.${k}`);
+  }
+  if (dept && dept !== 'ทั้งหมด') query = query.eq('dept', dept);
+  if (type && type !== 'ทั้งหมด') query = query.eq('type', type);
+  if (year && year !== 'ทั้งหมด') {
+    const y = Number(year);
+    if (!Number.isNaN(y)) query = query.eq('year', y);
+  }
 
-  if (qs.cursor) q = q.gt("id", qs.cursor);
-
-  const { data, error } = await q.limit(qs.limit + 1);
+  const { data, error, count } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const hasMore = (data?.length || 0) > qs.limit;
-  const slice = hasMore ? data!.slice(0, qs.limit) : (data || []);
-  const items = slice.map(serializePublication);
-  const nextCursor = hasMore ? data![qs.limit].id : null;
-
-  return NextResponse.json({ items, nextCursor });
-}
-
-const BodyCreate = z.object({
-  title: z.string().min(1),
-  abstract: z.string().optional(),
-  type: z.string().optional(),
-  authors: z.union([z.array(z.string()), z.string()]).optional(),
-  year: z.number().int().optional(),
-  dept: z.string().optional(),
-  status: z.string().optional(),
-  thumbUrl: z.string().optional(),
-  filePath: z.string().optional(),
-  project_id: z.string().uuid().optional(),
-});
-
-export async function POST(req: NextRequest) {
-  await requireRole(["admin", "officer", "teacher"]);
-  const body = BodyCreate.parse(await req.json());
-
-  const sb = await supabaseServer();
-
-  const authorsText =
-    Array.isArray(body.authors) ? body.authors.join(", ") :
-    typeof body.authors === "string" ? body.authors : "";
-
-  const { data, error } = await sb
-    .from("publications")
-    .insert({
-      title: body.title,
-      abstract: body.abstract ?? null,
-      type: body.type ?? null,
-      authors: authorsText,
-      year: body.year ?? null,
-      dept: body.dept ?? null,
-      status: body.status ?? "pending",
-      thumb_url: body.thumbUrl ?? null,
-      file_path: body.filePath ?? null,
-      project_id: body.project_id ?? null,
-    })
-    .select("*")
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-
-  return NextResponse.json({ id: data.id });
+  return NextResponse.json({ items: data ?? [], total: count ?? 0 });
 }

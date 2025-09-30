@@ -1,35 +1,33 @@
 "use client";
+
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
 import Button from "@mui/material/Button";
-import SearchIcon from "@mui/icons-material/Search";
 import Image from "next/image";
 import { PSU } from "@/theme/brand";
 import { usePathname, useRouter } from "next/navigation";
 
-const ITEMS = ["HOME", "PROJECT"] as const;
-
 export default function TopBarPublic() {
   const pathname = usePathname();
   const router = useRouter();
-  const base = "/";
 
+  // โครง (public) -> URL จริงคือ "/" และ "/search"
   const value = (() => {
-    if (pathname === base || pathname === "/public") return 0;
-    if (pathname.startsWith("/publications")) return 1;
-    if (pathname.startsWith("/public/search")) return 1;
+    if (pathname === "/") return 0;
+    if (pathname.startsWith("/publications") || pathname.startsWith("/search")) return 1;
     return 0;
   })();
 
   return (
-    <AppBar position="sticky" elevation={0}
-      sx={{ bgcolor: "#fff", color: PSU.text, borderBottom: `1px solid ${PSU.cardBorder}` }}>
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{ bgcolor: "#fff", color: PSU.text, borderBottom: `1px solid ${PSU.cardBorder}` }}
+    >
       <div className="container">
         <Toolbar disableGutters sx={{ gap: 2.5, minHeight: 72 }}>
           <Box sx={{ position: "relative", width: 140, height: 40 }}>
@@ -40,7 +38,8 @@ export default function TopBarPublic() {
           <Tabs
             value={value}
             onChange={(_, i) => {
-              const to = i === 0 ? "/public" : "/publications";
+              // HOME -> "/", PROJECT -> "/search"
+              const to = i === 0 ? "/" : "/search";
               router.push(to);
             }}
             textColor="inherit"
@@ -56,8 +55,11 @@ export default function TopBarPublic() {
 
           <Box sx={{ flex: 1 }} />
 
-          <Button variant="outlined" sx={{ borderRadius: 999, height: 38, borderColor: PSU.cardBorder }}
-            href="/login">
+          <Button
+            variant="outlined"
+            sx={{ borderRadius: 999, height: 38, borderColor: PSU.cardBorder }}
+            href="/login"
+          >
             Login
           </Button>
         </Toolbar>
